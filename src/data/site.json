@@ -1,0 +1,322 @@
+{
+  "sections": [
+    {
+      "name": "Interface Design",
+      "columns": [
+        "year",
+        "title"
+      ],
+      "rows": [
+        {
+          "year": "2024",
+          "title": "Roland, Tone explorer",
+          "href": "/biography/tone-explorer"
+        },
+        {
+          "year": "2022",
+          "title": "NeuCraft",
+          "href": "/neucraft"
+        },
+        {
+          "year": "2020",
+          "title": "Neural Beatbox",
+          "href": "/neural-beatbox"
+        },
+        {
+          "year": "2020",
+          "title": "SIAF 2020 matrix",
+          "href": "/biography/siaf-2020-matrix"
+        },
+        {
+          "year": "2019",
+          "title": "Sony Fes Watch",
+          "href": "/biography/sony-fes-watch"
+        }
+      ]
+    },
+    {
+      "name": "Graphic Design",
+      "columns": [
+        "year",
+        "title"
+      ],
+      "rows": [
+        {
+          "year": "2025",
+          "title": "MIKAMI MEME 2025｜三上晴子と創造のミーム",
+          "href": "/biography/mikami-meme"
+        },
+        {
+          "year": "2024",
+          "title": "Neutone",
+          "href": "/biography/neutone-morpho"
+        },
+        {
+          "year": "2020",
+          "title": "Qosmo season’s greeting",
+          "href": "/biography/qosmo-seasons-greeting"
+        },
+        {
+          "year": "2018",
+          "title": "三宅唱 ワールドツアー",
+          "href": "/biography/sho-miyake-world-tour"
+        },
+        {
+          "year": "2017",
+          "title": "Vanishing Mesh",
+          "href": "/biography/vanishing-mesh"
+        },
+        {
+          "year": "2017",
+          "title": "Hello, YCAM!",
+          "href": "/biography/hello-ycam"
+        },
+        {
+          "year": "2017",
+          "title": "細尾 布のデミウルゴス",
+          "href": "/biography/hosoo-fabrics-as-demiurges"
+        },
+        {
+          "year": "2016",
+          "title": "Marshmallow laser feast, In The Eyes Of The Animals　もしも森のいきものになったら",
+          "href": "/biography/marshmallow-laser-feast-in-the-eyes-of-the-animals"
+        },
+        {
+          "year": "2016",
+          "title": "YCAM Open lab, Think Things",
+          "href": "/biography/ycam-open-lab-think-things"
+        },
+        {
+          "year": "2016",
+          "title": "YCAM Guest research project vol.3: Reza Ali",
+          "href": "/biography/guest-research-project-vol3-reza-ali"
+        },
+        {
+          "year": "2015",
+          "title": "JackIn, Parallel Eyes",
+          "href": "/jackin-parallel-eyes"
+        },
+        {
+          "year": "2015",
+          "title": "YCAM Sound Ttectonics #15, Sound &amp; Lyrics",
+          "href": "/biography/sound-tectonics-15-sound-lyrics"
+        },
+        {
+          "year": "2014",
+          "title": "田村友一郎 Y市の穴巡り",
+          "href": "/biography/yuichiro-tamura"
+        },
+        {
+          "year": "2014",
+          "title": "Moon Kyungwon, Promise Park",
+          "href": "/biography/moon-kyungwon-promise-park"
+        },
+        {
+          "year": "2014",
+          "title": "チェルフィッチュ 地面と床 Chelfitsch, Ground and Floor",
+          "href": "/biography/chelfitsch-ground-and-floor"
+        },
+        {
+          "year": "2014",
+          "title": "アント・ハンプトン＋ティム・エッチェルス The Quiet Volume",
+          "href": "/biography/アントハンプトンティムエッチェルス-the-quiet-volume"
+        },
+        {
+          "year": "2012",
+          "title": "ARTSAT: Tama Art University + Tokyo University",
+          "href": "/biography/artsat-verification-card-tama-art-university-tokyo-university"
+        },
+        {
+          "year": "2011",
+          "title": "Seiko Mikami, Desire of Codes, NTT InterCommunication Center",
+          "href": "/biography/seiko-mikami-desire-of-codes"
+        }
+      ]
+    },
+    {
+      "name": "Editorial Design",
+      "columns": [
+        "year",
+        "title"
+      ],
+      "rows": [
+        {
+          "year": "2025",
+          "title": "Kiyo Hasegawa, Providence",
+          "href": "/biography/kiyo-hasegawa-providence"
+        },
+        {
+          "year": "2019",
+          "title": "三上晴子 記録と記憶",
+          "href": "/三上晴子-記録と記憶"
+        },
+        {
+          "year": "2018",
+          "title": "梅田哲也 メディア・アートの亡霊",
+          "href": "/biography/tetsuya-umeda-phantom-of-media-art"
+        },
+        {
+          "year": "2016",
+          "title": "Ryuichi Sakamoto, Forest Symphony",
+          "href": "/ryuichi-sakamoto-forest-symphony"
+        },
+        {
+          "year": "2016",
+          "title": "つくるのつくりかた",
+          "href": "/biography/つくるのつくりかた"
+        },
+        {
+          "year": "2013",
+          "title": "大竹伸朗｜A Compact Guide to Shiro Ohtake Scrap Books ア・コンパクト・ガイド・トゥー・シンロウ・オウタケ・スクラップブックス",
+          "href": "/大竹伸朗a-compact-guide-to-shiro-ohtake-scrap-books-アコンパクトガイドトゥーシンロウオウタケスクラップブックス"
+        },
+        {
+          "year": "2013",
+          "title": "0g (zero-gauge)_01（阿木譲=編著）",
+          "href": "/0g-zero-gauge01阿木譲編著"
+        },
+        {
+          "year": "2012",
+          "title": "大竹伸朗｜ドクメンタ13 マテリアルズ：01-10_スペシャル・エディション",
+          "href": "/大竹伸朗ドクメンタ13-マテリアルズ01-10スペシャルエディション"
+        },
+        {
+          "year": "2012",
+          "title": "Ryoji Ikeda, datamatics book, charta",
+          "href": "/biography/ryoji-ikeda-datamatics-book"
+        }
+      ]
+    },
+    {
+      "name": "Group Exhibitions",
+      "columns": [
+        "year",
+        "title",
+        "venue"
+      ],
+      "rows": [
+        {
+          "year": "2025",
+          "title": "常設展示「未読の宇宙」 The Universe: Unread Messages",
+          "href": "/biography/miraikan-the-universe-unread-messages",
+          "venue": "日本科学未来館"
+        },
+        {
+          "year": "2021",
+          "title": "Imaginary Dictionary 未来を編む辞書",
+          "href": "/imaginary-dictionary-未来を編む辞書",
+          "venue": "21_21 DESIGN SIGHT"
+        },
+        {
+          "year": "2021",
+          "title": "Unlabeled  – Camouflage Against the Machines",
+          "href": "/unlabeled-camouflage-against-the-machines",
+          "venue": "渋谷PARCO"
+        },
+        {
+          "year": "2012",
+          "title": "スペクトリウム",
+          "href": "/スペクトリウム",
+          "venue": "アキバタマビ21"
+        },
+        {
+          "year": "2009",
+          "title": "オープン・スペース2009 MISSION G",
+          "href": "/オープンスペース2009-mission-g",
+          "venue": "NTT InterCommunication Center"
+        }
+      ]
+    },
+    {
+      "name": "Teaching",
+      "columns": [
+        "year",
+        "title",
+        "text"
+      ],
+      "rows": [
+        {
+          "year": "2025",
+          "title": "多摩美術大学 Tama Art University",
+          "href": "/tama-art-university",
+          "text": "Computational Typography Workshop"
+        },
+        {
+          "year": "2025",
+          "title": "多摩美術大学 Tama Art University",
+          "href": "/多摩美術大学-tama-art-university-1",
+          "text": "Digital Mapping Workshop"
+        },
+        {
+          "year": "2025",
+          "title": "ミームデザインスクール MeMe Design School",
+          "href": "/meme-design-school",
+          "text": "Generative AI workshop"
+        },
+        {
+          "year": "2025",
+          "title": "東北芸術工科大学 Tohoku University of Art and Design",
+          "href": "/tohoku-university-of-art-design",
+          "text": "AI coding workshop"
+        },
+        {
+          "year": "2024",
+          "title": "多摩美術大学 Tama Art University",
+          "href": "/多摩美術大学-tama-art-university",
+          "text": "Audio visual workshop B"
+        },
+        {
+          "year": "2023",
+          "title": "多摩美術大学 Tama Art University",
+          "href": "/多摩美術大学-tama-art-university-2",
+          "text": "Audio visual workshop A"
+        }
+      ]
+    },
+    {
+      "name": "Publications",
+      "columns": [
+        "year",
+        "title",
+        "publisher"
+      ],
+      "rows": [
+        {
+          "year": "2025",
+          "title": "アイデア No.412, ［小特集］AIと共創しデザインするには？",
+          "publisher": "誠文堂新光社"
+        },
+        {
+          "year": "2023",
+          "title": "アイデア No.404, AIとの共創 ヴィジュアル表現に見る生成と創造 共同編集",
+          "href": "/idea-no",
+          "publisher": "誠文堂新光社"
+        }
+      ]
+    },
+    {
+      "name": "Educational background",
+      "columns": [
+        "year",
+        "title"
+      ],
+      "rows": [
+        {
+          "year": "2011",
+          "title": "M.F.A., Tama Art University, Information Design",
+          "href": "/mfa-tama-art-university-department-of-information-design"
+        },
+        {
+          "year": "2010",
+          "title": "Exchange Program, Berlin University of the Arts (UdK Berlin)",
+          "href": "/year/exchange-program-berlin-university-of-the-arts-udk-berlin"
+        },
+        {
+          "year": "2009",
+          "title": "B.F.A., Tama Art University, Department of Information Design",
+          "href": "/bfa-tama-art-university-department-of-information-design"
+        }
+      ]
+    }
+  ]
+}

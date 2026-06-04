@@ -1,0 +1,271 @@
+:root,
+html.theme-light {
+  --font: "Inter", "Inter-fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text: #000;
+  --text-secondary: #000;
+  --bg: #ffffff;
+  --row-fill: transparent;
+  --border: rgba(0, 0, 0, 0.16);
+  --navbar-shadow: none;
+  --content-max: 900px;
+  --column-spacing: 46px;
+}
+
+html.theme-dark {
+  --text: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --bg: #191919;
+  --row-fill: transparent;
+  --border: rgba(255, 255, 255, 0.13);
+  --navbar-shadow: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--text);
+  text-decoration: none;
+  pointer-events: none;
+  cursor: default;
+}
+
+.site-root {
+  min-height: 100vh;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  box-shadow: var(--navbar-shadow);
+}
+
+.navbar__inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 12px 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 45px;
+}
+
+.navbar__logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.navbar__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 8px 96px 96px;
+  color: var(--text);
+}
+
+.row-pair {
+  display: flex;
+  gap: var(--column-spacing);
+  margin: 2px 0;
+}
+
+.row-pair__col {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-pair__col p {
+  margin: 1px 0;
+  padding: 3px 2px;
+  min-height: 1.5em;
+  color: var(--text);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin: 6px 0;
+  background: var(--border);
+  border: none;
+}
+
+.work-section {
+  margin: 0;
+}
+
+.work-section__summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  margin: 1em 0 4px;
+  padding: 3px 2px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  user-select: none;
+}
+
+.work-section__summary::-webkit-details-marker {
+  display: none;
+}
+
+.work-section__summary::marker {
+  content: "";
+}
+
+.work-section__toggle {
+  display: inline-block;
+  width: 1em;
+  flex-shrink: 0;
+  font-weight: 400;
+  text-align: center;
+  line-height: 1;
+}
+
+.work-section[open] .work-section__toggle::before {
+  content: "−";
+}
+
+.work-section:not([open]) .work-section__toggle::before {
+  content: "+";
+}
+
+.work-section__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.collection {
+  margin: 4px 0 8px;
+}
+
+.collection-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.collection-table td {
+  padding: 4px 8px 4px 0;
+  vertical-align: top;
+  border: none;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.collection-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.collection-table td.year {
+  width: 102px;
+  white-space: nowrap;
+}
+
+.collection-table td.venue,
+.collection-table td.publisher {
+  width: 202px;
+}
+
+.collection-table td.text {
+  width: 335px;
+}
+
+.collection-table tbody tr {
+  background-color: var(--row-fill);
+}
+
+.row-title span {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.spacer {
+  height: 8px;
+}
+
+@media (max-width: 768px) {
+  .navbar__inner,
+  .content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .row-pair {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .row-pair__col {
+    flex: none;
+    width: 100%;
+  }
+
+  .collection-table tbody tr {
+    display: block;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .collection-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .collection-table td {
+    display: block;
+    width: 100%;
+    padding: 2px 0;
+    border-bottom: none;
+    white-space: normal;
+  }
+
+  .collection-table td.year,
+  .collection-table td.venue,
+  .collection-table td.publisher,
+  .collection-table td.text {
+    width: 100%;
+  }
+
+  .collection-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+}

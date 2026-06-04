@@ -1,0 +1,57 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Naoki Ise",
+  description = "伊勢尚生",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="ja" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://info.naokiise.com" />
+    <meta property="og:site_name" content="Naoki Ise" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      (function () {
+        const html = document.documentElement;
+        try {
+          const pref = localStorage ? localStorage.getItem("color-preference") : null;
+          html.classList.remove("theme-light", "theme-dark");
+          html.classList.add(pref === "dark" ? "theme-dark" : "theme-light");
+        } catch (e) {
+          html.classList.remove("theme-dark");
+          html.classList.add("theme-light");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="site-root">
+      <slot />
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  @import "../styles/global.css";
+</style>

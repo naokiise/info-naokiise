@@ -1,0 +1,20 @@
+---
+interface Props {
+  left: string;
+  right: string | string[];
+}
+
+const { left, right } = Astro.props;
+const rightItems = Array.isArray(right) ? right : [right];
+---
+
+<div class="row-pair">
+  <div class="row-pair__col">
+    <p>{left}</p>
+  </div>
+  <div class="row-pair__col">
+    {rightItems.map((item) => (
+      <p set:html={item} />
+    ))}
+  </div>
+</div>

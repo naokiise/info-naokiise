@@ -1,0 +1,39 @@
+---
+import type { WorkSection as WorkSectionType } from "../lib/types";
+
+interface Props {
+  section: WorkSectionType;
+}
+
+const { section } = Astro.props;
+const cols = section.columns;
+const hasVenue = cols.includes("venue");
+const hasText = cols.includes("text");
+const hasPublisher = cols.includes("publisher");
+---
+
+<details class="work-section" open>
+  <summary class="work-section__summary">
+    <span class="work-section__toggle" aria-hidden="true"></span>
+    <span class="work-section__title">{section.name}</span>
+  </summary>
+  <div class="collection">
+    <table class="collection-table">
+      <tbody>
+        {
+          section.rows.map((row) => (
+            <tr>
+              <td class="year">{row.year}</td>
+              <td class="title row-title">
+                <span>{row.title}</span>
+              </td>
+              {hasText && <td class="text">{row.text ?? ""}</td>}
+              {hasVenue && <td class="venue">{row.venue ?? ""}</td>}
+              {hasPublisher && <td class="publisher">{row.publisher ?? ""}</td>}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</details>
