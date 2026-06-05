@@ -275,6 +275,7 @@
     },
     {
       "name": "Publications",
+      "nofill": true,
       "columns": [
         "year",
         "title",
@@ -296,6 +297,7 @@
     },
     {
       "name": "Educational background",
+      "nofill": true,
       "columns": [
         "year",
         "title"

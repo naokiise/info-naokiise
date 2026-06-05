@@ -11,6 +11,8 @@ export interface WorkSection {
   name: string;
   columns: string[];
   rows: WorkRow[];
+  /** No row/card background (Notion-style nofill) */
+  nofill?: boolean;
 }
 
 export interface SiteData {

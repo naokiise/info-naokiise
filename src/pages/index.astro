@@ -1,9 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
-import RowPair from "../components/RowPair.astro";
-import Divider from "../components/Divider.astro";
 import WorkSection from "../components/WorkSection.astro";
+import WorksScatter from "../components/WorksScatter.astro";
+import WorksMap from "../components/WorksMap.astro";
 import siteData from "../data/site.json";
 import type { SiteData } from "../lib/types";
 
@@ -13,31 +13,12 @@ const { sections } = siteData as SiteData;
 <Layout>
   <Navbar />
   <main class="content">
-    <RowPair left="伊勢尚生" right="Ise, Naoki" />
-    <Divider />
-    <div class="row-pair">
-      <div class="row-pair__col">
-        <p>Contact</p>
-      </div>
-      <div class="row-pair__col">
-        <p>Inquiries: naokiise@gmail.com</p>
-        <p>Instagram: @naokiise</p>
-      </div>
+    <div class="works" id="works">
+      {sections.map((section, index) => (
+        <WorkSection section={section} defaultOpen={index === 0} />
+      ))}
     </div>
-    <Divider />
-    <RowPair
-      left="Biography"
-      right="グラフィックデザイナー、リサーチャー。山口情報芸術センター［YCAM］, Qosmoにて美術展のデザイン、AIを用いたグラフィックや音楽ソフトウェアのインターフェイスデザインなどに携わる。アルゴリズム、AIを用いたデザインの可能性を探求している。東北芸術工科大学グラフィックデザイン学科 専任講師。"
-    />
-    <Divider />
-    <div class="spacer"></div>
-    {
-      sections.map((section, index) => (
-        <>
-          {index > 0 && <Divider />}
-          <WorkSection section={section} />
-        </>
-      ))
-    }
+    <WorksScatter />
+    <WorksMap />
   </main>
 </Layout>

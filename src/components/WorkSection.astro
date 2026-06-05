@@ -1,39 +1,43 @@
 ---
 import type { WorkSection as WorkSectionType } from "../lib/types";
+import { slugify } from "../lib/slug";
 
 interface Props {
   section: WorkSectionType;
+  defaultOpen?: boolean;
 }
 
-const { section } = Astro.props;
-const cols = section.columns;
-const hasVenue = cols.includes("venue");
-const hasText = cols.includes("text");
-const hasPublisher = cols.includes("publisher");
+const { section, defaultOpen = false } = Astro.props;
+const sectionId = slugify(section.name);
+const hasVenue = section.columns.includes("venue");
+const hasText = section.columns.includes("text");
+const hasPublisher = section.columns.includes("publisher");
 ---
 
-<details class="work-section" open>
+<details
+  id={`work-${sectionId}`}
+  class:list={["work-section", section.nofill && "work-section--nofill"]}
+  open={defaultOpen || undefined}
+>
   <summary class="work-section__summary">
     <span class="work-section__toggle" aria-hidden="true"></span>
     <span class="work-section__title">{section.name}</span>
   </summary>
-  <div class="collection">
-    <table class="collection-table">
-      <tbody>
-        {
-          section.rows.map((row) => (
-            <tr>
-              <td class="year">{row.year}</td>
-              <td class="title row-title">
-                <span>{row.title}</span>
-              </td>
-              {hasText && <td class="text">{row.text ?? ""}</td>}
-              {hasVenue && <td class="venue">{row.venue ?? ""}</td>}
-              {hasPublisher && <td class="publisher">{row.publisher ?? ""}</td>}
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
+  <ul class="work-list">
+    {
+      section.rows.map((row) => (
+        <li class="work-item">
+          <span class="work-item__year">{row.year}</span>
+          <div class="work-item__body">
+            <p class="work-item__title">{row.title}</p>
+            {hasText && row.text && <p class="work-item__meta">{row.text}</p>}
+            {hasVenue && row.venue && <p class="work-item__meta">{row.venue}</p>}
+            {hasPublisher && row.publisher && (
+              <p class="work-item__meta">{row.publisher}</p>
+            )}
+          </div>
+        </li>
+      ))
+    }
+  </ul>
 </details>

@@ -1,0 +1,14 @@
+<script>
+  import { initScatterWorks } from "../scripts/scatter-works";
+
+  function start() {
+    const works = document.getElementById("works");
+    if (works) initScatterWorks(works);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    requestAnimationFrame(start);
+  }
+</script>
