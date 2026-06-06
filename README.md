@@ -20,11 +20,19 @@ npm run preview
 
 ## GitHub Pages 公開
 
-`main` ブランチへの push で GitHub Actions がビルド・デプロイします。
+リポジトリ: [github.com/naokiise/info-naokiise](https://github.com/naokiise/info-naokiise)
+
+```bash
+npm run deploy
+```
+
+`main` にソースを push し、`npm run deploy` で `gh-pages` ブランチへビルド成果物を公開します。
 
 - カスタムドメイン: [info.naokiise.com](https://info.naokiise.com/)
 - DNS: `info` の CNAME を `naokiise.github.io` に向ける（Super.so の CNAME は削除）
-- リポジトリ Settings → Pages → Custom domain に `info.naokiise.com` を設定
+- GitHub → Settings → Pages → Custom domain に `info.naokiise.com` を設定
+
+（`.github/workflows/deploy.yml` による自動デプロイも用意済み。`workflow` スコープ付きで push すれば `main` への push だけで公開できます。）
 
 ## 構成
 
