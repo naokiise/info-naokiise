@@ -14,8 +14,8 @@ const { sections } = siteData as SiteData;
   <Navbar />
   <main class="content">
     <div class="works" id="works">
-      {sections.map((section, index) => (
-        <WorkSection section={section} defaultOpen={index === 0} />
+      {sections.map((section) => (
+        <WorkSection section={section} />
       ))}
     </div>
     <WorksScatter />

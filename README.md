@@ -18,6 +18,14 @@ npm run build
 npm run preview
 ```
 
+## GitHub Pages 公開
+
+`main` ブランチへの push で GitHub Actions がビルド・デプロイします。
+
+- カスタムドメイン: [info.naokiise.com](https://info.naokiise.com/)
+- DNS: `info` の CNAME を `naokiise.github.io` に向ける（Super.so の CNAME は削除）
+- リポジトリ Settings → Pages → Custom domain に `info.naokiise.com` を設定
+
 ## 構成
 
 - `src/pages/index.astro` — トップページ

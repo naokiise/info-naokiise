@@ -1,14 +1,25 @@
 <script>
   import { initScatterWorks } from "../scripts/scatter-works";
 
+  let cleanup: (() => void) | undefined;
+
   function start() {
     const works = document.getElementById("works");
-    if (works) initScatterWorks(works);
+    if (!works) return;
+    cleanup?.();
+    cleanup = initScatterWorks(works) ?? undefined;
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
+    document.addEventListener("DOMContentLoaded", start, { once: true });
   } else {
-    requestAnimationFrame(start);
+    start();
+  }
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      cleanup?.();
+      cleanup = undefined;
+    });
   }
 </script>

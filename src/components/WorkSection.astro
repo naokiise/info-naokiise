@@ -1,43 +1,72 @@
 ---
 import type { WorkSection as WorkSectionType } from "../lib/types";
 import { slugify } from "../lib/slug";
+import { compositeFontHtml } from "../lib/typography";
+import imgDsc6048 from "../img/_DSC6048.jpeg";
 
 interface Props {
   section: WorkSectionType;
-  defaultOpen?: boolean;
 }
 
-const { section, defaultOpen = false } = Astro.props;
+const rowImages: Record<string, ImageMetadata> = {
+  "_DSC6048.jpeg": imgDsc6048,
+};
+
+const { section } = Astro.props;
 const sectionId = slugify(section.name);
 const hasVenue = section.columns.includes("venue");
 const hasText = section.columns.includes("text");
 const hasPublisher = section.columns.includes("publisher");
 ---
 
-<details
+<div
   id={`work-${sectionId}`}
   class:list={["work-section", section.nofill && "work-section--nofill"]}
-  open={defaultOpen || undefined}
 >
-  <summary class="work-section__summary">
-    <span class="work-section__toggle" aria-hidden="true"></span>
-    <span class="work-section__title">{section.name}</span>
-  </summary>
+  <button type="button" class="work-section__summary">
+    <span class="work-section__title" set:html={compositeFontHtml(section.name)} />
+  </button>
   <ul class="work-list">
     {
       section.rows.map((row) => (
-        <li class="work-item">
-          <span class="work-item__year">{row.year}</span>
-          <div class="work-item__body">
-            <p class="work-item__title">{row.title}</p>
-            {hasText && row.text && <p class="work-item__meta">{row.text}</p>}
-            {hasVenue && row.venue && <p class="work-item__meta">{row.venue}</p>}
-            {hasPublisher && row.publisher && (
-              <p class="work-item__meta">{row.publisher}</p>
-            )}
-          </div>
-        </li>
+          <li
+            class:list={[
+              "work-item",
+              row.image && "work-item--has-image",
+            ]}
+            id={row.image ? `work-item-${slugify(row.title)}` : undefined}
+          >
+            {
+              row.image && rowImages[row.image] && (
+                <img
+                  class="work-item__image"
+                  src={rowImages[row.image].src}
+                  width={rowImages[row.image].width}
+                  height={rowImages[row.image].height}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              )
+            }
+            <span class="work-item__year font-inter" lang="en">{row.year}</span>
+            <div class="work-item__body">
+              <p class="work-item__title" set:html={compositeFontHtml(row.title)} />
+              {hasText && row.text && (
+                <p class="work-item__meta" set:html={compositeFontHtml(row.text)} />
+              )}
+              {hasVenue && row.venue && (
+                <p class="work-item__meta" set:html={compositeFontHtml(row.venue)} />
+              )}
+              {hasPublisher && row.publisher && (
+                <p
+                  class="work-item__meta"
+                  set:html={compositeFontHtml(row.publisher)}
+                />
+              )}
+            </div>
+          </li>
       ))
     }
   </ul>
-</details>
+</div>

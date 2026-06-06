@@ -5,6 +5,7 @@ export interface WorkRow {
   venue?: string;
   text?: string;
   publisher?: string;
+  image?: string;
 }
 
 export interface WorkSection {
