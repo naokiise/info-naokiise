@@ -1,6 +1,6 @@
 # Naoki Ise — Portfolio (Astro)
 
-[info.naokiise.com](https://info.naokiise.com/) を Notion Super なしで再実装した Astro サイトです。
+[info.naokiise.com](https://info.naokiise.com/) を再実装したAstroサイトです。
 
 ## 開発
 
