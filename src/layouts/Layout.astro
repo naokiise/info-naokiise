@@ -18,7 +18,7 @@ const {
     <meta name="description" content={description} />
     <meta name="robots" content="index, follow" />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content="https://info.naokiise.com" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
     <meta property="og:site_name" content="Naoki Ise" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />

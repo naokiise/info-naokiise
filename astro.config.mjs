@@ -3,8 +3,8 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://info.naokiise.com',
-  base: '/',
+  site: 'https://naokiise.github.io',
+  base: '/info-naokiise/',
   devToolbar: {
     enabled: false,
   },

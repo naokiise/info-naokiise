@@ -22,7 +22,6 @@ const WORLD_WIDTH_RATIO = 2.6;
 const SCROLL_STEP_VH = 1;
 const GRAPHIC_DESIGN_KEY = "work-graphic-design";
 const GRAPHIC_DESIGN_OPEN_Y_RATIO = 0.78;
-const GRAPHIC_DESIGN_FOCUS_Y_RATIO = 0.62;
 
 type SectionAnchor = {
   el: HTMLElement;
@@ -621,15 +620,21 @@ export function initScatterWorks(container: HTMLElement) {
     return Math.min(1, Math.max(0, y / range));
   }
 
+  function cameraViewportAnchor() {
+    return { x: headerAlign, y: TOP_PAD };
+  }
+
   function cameraAtScrollProgress(p: number) {
+    const anchor = cameraViewportAnchor();
+
     if (scrollAnchors.length === 0) {
       return { viewX: 0, viewY: 0, angle: 0 };
     }
     if (scrollAnchors.length === 1) {
       const a = scrollAnchors[0];
       return {
-        viewX: a.cx - viewportWidth / 2,
-        viewY: a.cy - viewportHeight / 2,
+        viewX: a.cx - anchor.x,
+        viewY: a.cy - anchor.y,
         angle: -a.rot,
       };
     }
@@ -641,8 +646,8 @@ export function initScatterWorks(container: HTMLElement) {
     const b = scrollAnchors[i + 1];
 
     return {
-      viewX: a.cx + (b.cx - a.cx) * t - viewportWidth / 2,
-      viewY: a.cy + (b.cy - a.cy) * t - viewportHeight / 2,
+      viewX: a.cx + (b.cx - a.cx) * t - anchor.x,
+      viewY: a.cy + (b.cy - a.cy) * t - anchor.y,
       angle: -(a.rot + (b.rot - a.rot) * t),
     };
   }
@@ -681,15 +686,14 @@ export function initScatterWorks(container: HTMLElement) {
     if (!focusEl) return;
 
     const cRect = container.getBoundingClientRect();
-    const eRect = focusEl.getBoundingClientRect();
-    const elCx = eRect.left - cRect.left + eRect.width / 2;
-    const elCy = eRect.top - cRect.top + eRect.height / 2;
-    const focusY =
-      slotKey(focusEl) === GRAPHIC_DESIGN_KEY
-        ? cRect.height * GRAPHIC_DESIGN_FOCUS_Y_RATIO
-        : cRect.height / 2;
-    const dx = elCx - cRect.width / 2;
-    const dy = elCy - focusY;
+    const summary =
+      focusEl.querySelector<HTMLElement>(".work-section__summary") ?? focusEl;
+    const eRect = summary.getBoundingClientRect();
+    const anchor = cameraViewportAnchor();
+    const elLeft = eRect.left - cRect.left;
+    const elTop = eRect.top - cRect.top;
+    const dx = elLeft - anchor.x;
+    const dy = elTop - anchor.y;
 
     targetViewX = viewX + dx;
     targetViewY = viewY + dy;

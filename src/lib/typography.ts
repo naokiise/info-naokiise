@@ -9,6 +9,9 @@ function escapeHtml(text: string) {
     .replace(/"/g, "&quot;");
 }
 
+const LATIN_RUN_RE =
+  /[A-Za-z0-9][A-Za-z0-9''&.,:;+\-/() \u00C0-\u024F]*/g;
+
 function wrapCjkSegments(html: string) {
   return html
     .split(/(<[^>]+>)/g)
@@ -19,14 +22,27 @@ function wrapCjkSegments(html: string) {
     .join("");
 }
 
-/** 合成フォント: 欧文=Inter 100% / 和文=90% + 括弧内下げ */
+function wrapLatinSegments(html: string) {
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith("<")) return part;
+      return part.replace(LATIN_RUN_RE, (match) => {
+        if (!/[A-Za-z]/.test(match)) return match;
+        return `<span class="text-latin">${match}</span>`;
+      });
+    })
+    .join("");
+}
+
+/** 合成フォント: 欧文=Inter light / 和文=90% + 括弧内下げ */
 export function compositeFontHtml(text: string) {
   const escaped = escapeHtml(text);
   const withParens = escaped.replace(
     /（([^）]+)）/g,
     "（<span class=\"paren-drop\">$1</span>）",
   );
-  return wrapCjkSegments(withParens);
+  return wrapLatinSegments(wrapCjkSegments(withParens));
 }
 
 /** @deprecated compositeFontHtml を使用 */

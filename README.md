@@ -28,11 +28,8 @@ npm run deploy
 
 `main` にソースを push し、`npm run deploy` で `gh-pages` ブランチへビルド成果物を公開します。
 
-- カスタムドメイン: [info.naokiise.com](https://info.naokiise.com/)
-- DNS: `info` の CNAME を `naokiise.github.io` に向ける（Super.so の CNAME は削除）
-- GitHub → Settings → Pages → Custom domain に `info.naokiise.com` を設定
-
-（`.github/workflows/deploy.yml` による自動デプロイも用意済み。`workflow` スコープ付きで push すれば `main` への push だけで公開できます。）
+- 公開 URL: https://naokiise.github.io/info-naokiise/
+- カスタムドメイン `info.naokiise.com` を使う場合は `public/CNAME` を復元し、`astro.config.mjs` の `site` / `base` を調整
 
 ## 構成
 

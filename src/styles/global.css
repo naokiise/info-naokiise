@@ -7,6 +7,8 @@ html.theme-light {
     sans-serif;
   --font: var(--font-latin), var(--font-ja);
   --font-size-latin: 1em;
+  --font-size-latin-body: calc(var(--font-size-ja) * 1.1);
+  --font-weight-latin-body: 300;
   --font-size-ja: 0.9em;
   --font-features-ja: "palt" 1, "pkna" 1;
   --text: #000;
@@ -50,6 +52,14 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+.text-latin {
+  font-family: var(--font-latin);
+  font-size: var(--font-size-latin-body);
+  font-weight: var(--font-weight-latin-body);
+  font-style: normal;
+  font-synthesis: none;
+}
+
 .text-ja {
   font-family: var(--font-ja);
   font-size: var(--font-size-ja);
@@ -61,8 +71,8 @@ html {
 
 .font-inter {
   font-family: var(--font-year);
-  font-size: var(--font-size-latin);
-  font-weight: 400;
+  font-size: var(--font-size-latin-body);
+  font-weight: var(--font-weight-latin-body);
   font-feature-settings: var(--font-year-features);
   font-variant-numeric: tabular-nums lining-nums;
   font-variant-east-asian: normal;
@@ -73,7 +83,7 @@ body {
   font: inherit;
   color: var(--text);
   background: var(--bg);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 a {
@@ -110,6 +120,8 @@ a {
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .navbar__actions {
@@ -408,38 +420,6 @@ html:has(.works--scatter) {
   margin: 2px 0;
   padding: 0 2px;
   border-bottom: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.work-item--has-image {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: var(--column-spacing);
-  align-items: start;
-  overflow: visible;
-}
-
-.work-item__image {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  position: relative;
-  z-index: 0;
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  object-fit: contain;
-  object-position: center;
-  opacity: 0.42;
-  pointer-events: none;
-}
-
-.work-item--has-image .work-item__year,
-.work-item--has-image .work-item__body {
-  grid-row: 1;
-  position: relative;
-  z-index: 1;
-  align-self: start;
 }
 
 .work-item:last-child {
@@ -452,9 +432,10 @@ html:has(.works--scatter) {
   margin: 0;
   padding: 3px 2px;
   min-height: 1.5em;
+  line-height: 1.4;
   font-family: var(--font-year);
-  font-size: var(--font-size-latin);
-  font-weight: 400;
+  font-size: var(--font-size-latin-body);
+  font-weight: var(--font-weight-latin-body);
   font-style: normal;
   font-feature-settings: var(--font-year-features);
   font-variant-numeric: tabular-nums lining-nums;
@@ -488,6 +469,7 @@ html:has(.works--scatter) {
   margin: 0;
   padding: 3px 2px;
   min-height: 1.5em;
+  line-height: 1.4;
   color: var(--text);
   background: transparent;
 }
@@ -495,8 +477,25 @@ html:has(.works--scatter) {
 .work-item__meta {
   margin: 0;
   padding: 0 2px 3px;
+  line-height: 1.4;
   color: var(--text);
   background: transparent;
+}
+
+.work-item__title .text-latin,
+.work-item__meta .text-latin {
+  font-size: var(--font-size-latin-body);
+  font-weight: var(--font-weight-latin-body);
+}
+
+.work-item__title .text-ja,
+.work-item__meta .text-ja {
+  line-height: inherit;
+}
+
+.work-section__title .text-latin {
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .spacer {

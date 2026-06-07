@@ -1,16 +1,11 @@
 ---
 import type { WorkSection as WorkSectionType } from "../lib/types";
-import { slugify } from "../lib/slug";
 import { compositeFontHtml } from "../lib/typography";
-import imgDsc6048 from "../img/_DSC6048.jpeg";
+import { slugify } from "../lib/slug";
 
 interface Props {
   section: WorkSectionType;
 }
-
-const rowImages: Record<string, ImageMetadata> = {
-  "_DSC6048.jpeg": imgDsc6048,
-};
 
 const { section } = Astro.props;
 const sectionId = slugify(section.name);
@@ -29,26 +24,7 @@ const hasPublisher = section.columns.includes("publisher");
   <ul class="work-list">
     {
       section.rows.map((row) => (
-          <li
-            class:list={[
-              "work-item",
-              row.image && "work-item--has-image",
-            ]}
-            id={row.image ? `work-item-${slugify(row.title)}` : undefined}
-          >
-            {
-              row.image && rowImages[row.image] && (
-                <img
-                  class="work-item__image"
-                  src={rowImages[row.image].src}
-                  width={rowImages[row.image].width}
-                  height={rowImages[row.image].height}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
-              )
-            }
+          <li class="work-item">
             <span class="work-item__year font-inter" lang="en">{row.year}</span>
             <div class="work-item__body">
               <p class="work-item__title" set:html={compositeFontHtml(row.title)} />
