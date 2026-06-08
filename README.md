@@ -1,6 +1,6 @@
 # Naoki Ise — Portfolio (Astro)
 
-[info.naokiise.com](https://info.naokiise.com/) を再実装したAstroサイトです。
+[naokiise.com/info](https://naokiise.com/info) 向けの Astro サイトです。
 
 ## 開発
 
@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-http://localhost:4321 でプレビューできます。
+http://localhost:4321/info/ でプレビューできます。
 
 ## ビルド
 
@@ -18,7 +18,7 @@ npm run build
 npm run preview
 ```
 
-## GitHub Pages 公開
+## 公開
 
 リポジトリ: [github.com/naokiise/info-naokiise](https://github.com/naokiise/info-naokiise)
 
@@ -26,10 +26,7 @@ npm run preview
 npm run deploy
 ```
 
-`main` にソースを push し、`npm run deploy` で `gh-pages` ブランチへビルド成果物を公開します。
-
-- 公開 URL: https://naokiise.github.io/info-naokiise/
-- カスタムドメイン `info.naokiise.com` を使う場合は `public/CNAME` を復元し、`astro.config.mjs` の `site` / `base` を調整
+`npm run deploy` は `dist/info/` を [naokiise.github.io](https://github.com/naokiise/naokiise.github.io) の `info/` に push し、https://naokiise.com/info/ で公開します。
 
 ## 構成
 

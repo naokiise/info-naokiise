@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to naokiise.com/info
 
 on:
   push:
@@ -7,12 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -34,17 +28,40 @@ jobs:
         run: npm run build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: dist-info
           path: dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    if: github.repository == 'naokiise/info-naokiise'
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-info
+          path: dist-info
+
+      - name: Deploy to naokiise.github.io
+        env:
+          GH_TOKEN: ${{ secrets.NAOKIISE_SITE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "NAOKIISE_SITE_TOKEN is not set. Skipping deploy."
+            exit 0
+          fi
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/naokiise/naokiise.github.io.git" site
+          rm -rf site/info
+          cp -r dist-info site/info
+          cd site
+          git add info
+          if git diff --staged --quiet; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Deploy info site to /info"
+          git push origin main
