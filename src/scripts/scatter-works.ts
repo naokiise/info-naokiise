@@ -15,11 +15,16 @@ const CARD_MAX_CLOSED = 440;
 const CARD_MAX_OPEN = 680;
 const CAMERA_LERP = 0.036;
 const ANGLE_LERP = 0.03;
+const CAMERA_LERP_GLIDE = 0.022;
+const ANGLE_LERP_GLIDE = 0.018;
+const SWIPE_SECTION_THRESHOLD = 48;
 const AVOID_GAP = 112;
 const OVERLAP_MAX_ITERATIONS = 320;
 const PLACE_NUDGE_LIMIT = 96;
 const WORLD_WIDTH_RATIO = 2.6;
 const SCROLL_STEP_VH = 1;
+const MAP_LABEL_FONT_SCALE = 20;
+const MAP_CATEGORY_CIRCLE_PX = 8;
 const GRAPHIC_DESIGN_KEY = "work-graphic-design";
 const GRAPHIC_DESIGN_OPEN_Y_RATIO = 0.78;
 
@@ -131,6 +136,19 @@ export function initScatterWorks(container: HTMLElement) {
   let focusEl: HTMLElement | null = null;
   let pan: { startX: number; startY: number; viewX0: number; viewY0: number } | null =
     null;
+  let touchScroll: {
+    startX: number;
+    startY: number;
+    progress0: number;
+    sectionIndex0: number;
+    scrolling: boolean;
+  } | null = null;
+  const TOUCH_SCROLL_THRESHOLD = 6;
+  const TOUCH_SCROLL_THRESHOLD_NARROW = 12;
+  let suppressScrollCamera = false;
+  let cameraGlide = false;
+  let syncedSectionIndex = -1;
+  let userHasNavigated = false;
   let raf = 0;
   let scrollDriving = true;
   let scrollProgress = 0;
@@ -188,16 +206,9 @@ export function initScatterWorks(container: HTMLElement) {
   for (const el of sectionEls) {
     const summaryEl = el.querySelector<HTMLButtonElement>(".work-section__summary");
     if (summaryEl) {
-      const onSummaryClick = () => {
-        scrollDriving = false;
-        requestAnimationFrame(() => {
-          layout();
-          for (const section of sectionEls) {
-            syncOpenStyles(section, el);
-          }
-          focusCamera(el);
-          updateMap();
-        });
+      const onSummaryClick = (event: Event) => {
+        event.stopPropagation();
+        focusSection(el, true);
       };
 
       summaryEl.addEventListener("click", onSummaryClick);
@@ -223,21 +234,121 @@ export function initScatterWorks(container: HTMLElement) {
     }
   }
 
-  function activateSectionFromMap(el: HTMLElement) {
+  function shouldHandleTouchScroll(event: PointerEvent) {
+    const target = event.target;
+    if (!(target instanceof Element)) return false;
+    return !target.closest(
+      "button, a, input, textarea, select, label, .works-map, .works-map *",
+    );
+  }
+
+  function touchScrollThreshold() {
+    return isNarrowViewport() ? TOUCH_SCROLL_THRESHOLD_NARROW : TOUCH_SCROLL_THRESHOLD;
+  }
+
+  function markUserNavigated() {
+    userHasNavigated = true;
+  }
+
+  function focusSection(el: HTMLElement, animateCamera = false) {
+    markUserNavigated();
     scrollDriving = false;
+    for (const section of sectionEls) {
+      syncOpenStyles(section, el);
+    }
+    focusCamera(el, animateCamera);
+    if (!animateCamera) {
+      applyCamera();
+    }
+    updateMap();
+  }
+
+  function progressFromSectionIndex(index: number) {
+    const count = scrollAnchors.length;
+    if (count <= 1) return 0;
+    const clamped = Math.min(count - 1, Math.max(0, index));
+    return clamped / (count - 1);
+  }
+
+  function sectionIndexFromProgress(progress: number) {
+    const count = scrollAnchors.length;
+    if (count <= 1) return 0;
+    return Math.round(progress * (count - 1));
+  }
+
+  function navigateToSectionIndex(index: number, animate = false) {
+    const count = scrollAnchors.length;
+    if (count === 0) return;
+
+    markUserNavigated();
+    const clamped = Math.min(count - 1, Math.max(0, index));
+    const progress = progressFromSectionIndex(clamped);
+    const sectionEl = scrollAnchors[clamped]?.el ?? null;
+
+    clearFocus();
+    scrollDriving = true;
+    scrollProgress = progress;
+
+    suppressScrollCamera = true;
+    window.scrollTo(0, scrollTrack.offsetTop + progress * scrollRange());
     requestAnimationFrame(() => {
-      layout();
-      for (const section of sectionEls) {
-        syncOpenStyles(section, el);
-      }
-      focusCamera(el);
-      updateMap();
+      suppressScrollCamera = false;
     });
+
+    setCameraTargetForSection(sectionEl);
+    syncedSectionIndex = clamped;
+    if (animate) {
+      cameraGlide = true;
+    } else {
+      cameraGlide = false;
+      viewX = targetViewX;
+      viewY = targetViewY;
+      viewAngle = targetViewAngle;
+    }
+
+    clampView();
+    applyCamera();
+    updateMap();
+  }
+
+  function scrollToSection(el: HTMLElement) {
+    const index = scrollAnchors.findIndex((anchor) => anchor.el === el);
+    if (index < 0) return;
+
+    const progress = progressFromSectionIndex(index);
+    scrollProgress = progress;
+    suppressScrollCamera = true;
+    window.scrollTo(0, scrollTrack.offsetTop + progress * scrollRange());
+    requestAnimationFrame(() => {
+      suppressScrollCamera = false;
+    });
+  }
+
+  function activateSectionFromMap(el: HTMLElement) {
+    focusSection(el, true);
+    scrollToSection(el);
+  }
+
+  function onMapRouteClick(event: MouseEvent) {
+    if (!(event.target instanceof Element)) return;
+
+    const node = event.target.closest<HTMLElement>("[data-work-id]");
+    if (!node) return;
+
+    const el = document.getElementById(node.getAttribute("data-work-id") ?? "");
+    if (!(el instanceof HTMLElement) || !sectionEls.includes(el)) return;
+
+    event.stopPropagation();
+    event.preventDefault();
+    activateSectionFromMap(el);
   }
 
   function onMapFrameClick(event: MouseEvent) {
     if (!mapFrame || worldWidth <= 0 || worldHeight <= 0) return;
     if (event.target instanceof Element && event.target.closest(".works-map__marker")) {
+      return;
+    }
+    if (event.target instanceof Element && event.target.closest("[data-work-id]")) {
       return;
     }
 
@@ -247,27 +358,51 @@ export function initScatterWorks(container: HTMLElement) {
       event.clientY - rect.top,
     );
 
+    markUserNavigated();
     clearFocus();
     scrollDriving = false;
-    targetViewX = worldX - viewportWidth / 2;
-    targetViewY = worldY - viewportHeight / 2;
-    viewX = targetViewX;
-    viewY = targetViewY;
+    const view = viewForWorldAtScreen(
+      worldX,
+      worldY,
+      viewportWidth / 2,
+      viewportHeight / 2,
+    );
+    targetViewX = view.viewX;
+    targetViewY = view.viewY;
     targetViewAngle = 0;
-    viewAngle = 0;
+    cameraGlide = true;
     clampView();
-    applyCamera();
     updateMap();
   }
 
-  function categoryAnchorPoint(slot: ScatterSlot) {
+  function summaryAnchorLocal(el: HTMLElement) {
+    const summary = el.querySelector<HTMLElement>(".work-section__summary");
+    if (!summary) return { x: 12, y: 26 };
+
+    const title = summary.querySelector<HTMLElement>(".work-section__title");
+    if (title) {
+      return {
+        x: summary.offsetLeft + title.offsetLeft,
+        y:
+          summary.offsetTop +
+          title.offsetTop +
+          title.offsetHeight * 0.72,
+      };
+    }
+
+    return {
+      x: summary.offsetLeft,
+      y: summary.offsetTop + summary.offsetHeight * 0.38,
+    };
+  }
+
+  function categoryAnchorPoint(slot: ScatterSlot, el?: HTMLElement) {
     const rot = displayRot(slot);
     const pivotX = slot.w / 2;
     const pivotY = slot.h / 2;
-    const localX = 12;
-    const localY = 26;
-    const dx = localX - pivotX;
-    const dy = localY - pivotY;
+    const local = el ? summaryAnchorLocal(el) : { x: 12, y: 26 };
+    const dx = local.x - pivotX;
+    const dy = local.y - pivotY;
     const cos = Math.cos(rot);
     const sin = Math.sin(rot);
 
@@ -286,13 +421,38 @@ export function initScatterWorks(container: HTMLElement) {
       .join(" ");
   }
 
-  const MAP_VIEW_PAD = 1.75;
+  const MAP_VIEW_PAD = 1.05;
+
+  function screenToWorld(sx: number, sy: number) {
+    const { x: ax, y: ay } = cameraViewportAnchor();
+    const dx = sx - ax;
+    const dy = sy - ay;
+    const cos = Math.cos(-viewAngle);
+    const sin = Math.sin(-viewAngle);
+
+    return {
+      x: dx * cos - dy * sin + ax + viewX,
+      y: dx * sin + dy * cos + ay + viewY,
+    };
+  }
+
+  function viewForWorldAtScreen(wx: number, wy: number, sx: number, sy: number) {
+    const { x: ax, y: ay } = cameraViewportAnchor();
+    const cos = Math.cos(viewAngle);
+    const sin = Math.sin(viewAngle);
+    const dx = sx - ax;
+    const dy = sy - ay;
+    const px = dx * cos + dy * sin;
+    const py = -dx * sin + dy * cos;
+
+    return {
+      viewX: wx - ax - px,
+      viewY: wy - ay - py,
+    };
+  }
 
   function mapCameraCenter() {
-    return {
-      x: viewX + viewportWidth / 2,
-      y: viewY + viewportHeight / 2,
-    };
+    return screenToWorld(viewportWidth / 2, viewportHeight / 2);
   }
 
   function mapRotateWorldPoint(wx: number, wy: number) {
@@ -324,28 +484,25 @@ export function initScatterWorks(container: HTMLElement) {
   function mapViewBoxRect() {
     const frameW = mapFrame?.clientWidth ?? 0;
     const frameH = mapFrame?.clientHeight ?? 0;
-    const cam = mapCameraCenter();
-    const camCx = cam.x;
-    const camCy = cam.y;
 
     if (frameW <= 0 || frameH <= 0 || viewportWidth <= 0 || viewportHeight <= 0) {
       return { x: 0, y: 0, w: worldWidth, h: worldHeight, frameW, frameH };
     }
 
+    const cam = mapCameraCenter();
     const aspect = frameW / frameH;
     let vbW = viewportWidth * MAP_VIEW_PAD;
     let vbH = viewportHeight * MAP_VIEW_PAD;
-    const currentAspect = vbW / vbH;
 
-    if (currentAspect > aspect) {
+    if (vbW / vbH > aspect) {
       vbH = vbW / aspect;
     } else {
       vbW = vbH * aspect;
     }
 
     return {
-      x: camCx - vbW / 2,
-      y: camCy - vbH / 2,
+      x: cam.x - vbW / 2,
+      y: cam.y - vbH / 2,
       w: vbW,
       h: vbH,
       frameW,
@@ -419,6 +576,84 @@ export function initScatterWorks(container: HTMLElement) {
     return el.querySelector(".work-section__title")?.textContent?.trim() ?? "";
   }
 
+  function mapTitleLines(title: string, number?: number) {
+    const parts = title.trim().split(/\s+/).filter(Boolean);
+    const prefix = number ? `${number} ` : "";
+
+    if (parts.length <= 1) return [`${prefix}${parts[0] ?? ""}`];
+    return [`${prefix}${parts[0]}`, parts.slice(1).join(" ")];
+  }
+
+  function mapCategoryCircleRadius() {
+    const vb = mapViewBoxRect();
+    const scale = vb.frameW > 0 ? vb.w / vb.frameW : 1;
+    return (MAP_CATEGORY_CIRCLE_PX / 2) * scale;
+  }
+
+  function mapLabelSize(title: string) {
+    const lines = mapTitleLines(title);
+    const longest = Math.max(...lines.map((line) => line.length), 1);
+    const vb = mapViewBoxRect();
+    const labelBase = Math.min(vb.w, vb.h) * 0.045;
+
+    return (
+      Math.min(16, Math.max(6, labelBase / longest)) * MAP_LABEL_FONT_SCALE
+    );
+  }
+
+  function appendMapLabelBesideCircle(
+    group: SVGGElement,
+    title: string,
+    circleR: number,
+    number: number,
+  ) {
+    const lines = mapTitleLines(title, number);
+    const labelSize = mapLabelSize(lines.join(" "));
+    const gap = circleR * 0.55;
+    const labelX = circleR + gap;
+    const lineHeight = labelSize * 1.2;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("font-size", String(labelSize));
+    label.setAttribute("text-anchor", "start");
+    label.classList.add("works-map__route-label");
+
+    if (lines.length === 1) {
+      label.setAttribute("x", String(labelX));
+      label.setAttribute("y", "0");
+      label.setAttribute("dominant-baseline", "middle");
+      label.textContent = lines[0];
+      group.appendChild(label);
+      return;
+    }
+
+    const ascender = labelSize * 0.72;
+    const descender = labelSize * 0.22;
+    const startY =
+      ascender -
+      (lineHeight * (lines.length - 1) + ascender + descender) / 2;
+
+    lines.forEach((line, index) => {
+      const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+      tspan.setAttribute("x", String(labelX));
+      if (index === 0) {
+        tspan.setAttribute("y", String(startY));
+      } else {
+        tspan.setAttribute("dy", String(lineHeight));
+      }
+      tspan.textContent = line;
+      label.appendChild(tspan);
+    });
+
+    group.appendChild(label);
+  }
+
+  function readViewportSize() {
+    return {
+      w: Math.max(280, container.clientWidth),
+      h: Math.max(420, container.clientHeight),
+    };
+  }
+
   function syncRoutePoints(
     group: SVGGElement,
     points: SectionAnchor[],
@@ -427,11 +662,16 @@ export function initScatterWorks(container: HTMLElement) {
   ) {
     group.replaceChildren();
 
-    for (const point of points) {
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex++) {
+      const point = points[pointIndex];
       const pointGroup = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "g",
       );
+      pointGroup.classList.add("works-map__route-node");
+      if (forMap && point.el.id) {
+        pointGroup.setAttribute("data-work-id", point.el.id);
+      }
       const isFocus = point.el === focusEl;
       const isActive = point.el === activeEl;
 
@@ -443,46 +683,34 @@ export function initScatterWorks(container: HTMLElement) {
 
       if (forMap) {
         const deg = (point.rot * 180) / Math.PI;
+        const circleR = mapCategoryCircleRadius();
         pointGroup.setAttribute(
           "transform",
-          `translate(${point.x + point.w / 2} ${point.y + point.h / 2}) rotate(${deg}) translate(${-point.w / 2} ${-point.h / 2})`,
+          `translate(${point.cx} ${point.cy}) rotate(${deg})`,
         );
 
-        const rect = document.createElementNS(
+        const circle = document.createElementNS(
           "http://www.w3.org/2000/svg",
-          "rect",
+          "circle",
         );
-        rect.setAttribute("x", "0");
-        rect.setAttribute("y", "0");
-        rect.setAttribute("width", String(point.w));
-        rect.setAttribute("height", String(point.h));
-        rect.classList.add("works-map__route-point");
+        circle.setAttribute("cx", "0");
+        circle.setAttribute("cy", "0");
+        circle.setAttribute("r", String(circleR));
+        circle.classList.add("works-map__route-point");
 
         if (isFocus) {
-          rect.classList.add("works-map__route-point--focus");
+          circle.classList.add("works-map__route-point--focus");
         } else if (isActive) {
-          rect.classList.add("works-map__route-point--active");
+          circle.classList.add("works-map__route-point--active");
         }
 
-        const title = sectionTitle(point.el);
-        const label = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text",
+        pointGroup.appendChild(circle);
+        appendMapLabelBesideCircle(
+          pointGroup,
+          sectionTitle(point.el),
+          circleR,
+          pointIndex + 1,
         );
-        const labelSize = Math.min(
-          16,
-          Math.max(6, (Math.min(point.w, point.h) * 0.72) / Math.max(title.length, 1)),
-        );
-        label.setAttribute("x", String(point.w / 2));
-        label.setAttribute("y", String(point.h / 2));
-        label.setAttribute("text-anchor", "middle");
-        label.setAttribute("dominant-baseline", "middle");
-        label.setAttribute("font-size", String(labelSize));
-        label.classList.add("works-map__route-label");
-        label.textContent = title;
-
-        pointGroup.appendChild(rect);
-        pointGroup.appendChild(label);
       } else {
         const circle = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -509,7 +737,9 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function scrollOrderProgress() {
-    if (scrollDriving) return getScrollProgress();
+    if (scrollDriving) {
+      return isNarrowViewport() ? scrollProgress : getScrollProgress();
+    }
     if (focusEl && scrollAnchors.length > 0) {
       const index = scrollAnchors.findIndex((anchor) => anchor.el === focusEl);
       if (index >= 0) {
@@ -557,9 +787,52 @@ export function initScatterWorks(container: HTMLElement) {
 
   }
 
+  function updateMapFrameSize() {
+    if (!mapFrame || viewportWidth <= 0 || viewportHeight <= 0) return;
+
+    const narrow = isNarrowViewport();
+    let frameW: number;
+    let frameH: number;
+
+    if (narrow) {
+      const portraitAspect = 88 / 120;
+      const maxH = Math.min(60, Math.max(36, viewportHeight * 0.1));
+      const maxW = Math.min(70, viewportWidth - 48);
+
+      frameH = maxH;
+      frameW = frameH * portraitAspect;
+      if (frameW > maxW) {
+        frameW = maxW;
+        frameH = frameW / portraitAspect;
+      }
+
+      frameW = Math.max(32, frameW);
+      frameH = Math.max(24, frameH);
+    } else {
+      const aspect = viewportWidth / viewportHeight;
+      const maxW = 84;
+      const maxH = 56;
+
+      if (aspect >= maxW / maxH) {
+        frameW = maxW;
+        frameH = maxW / aspect;
+      } else {
+        frameH = maxH;
+        frameW = maxH * aspect;
+      }
+
+      frameW = Math.max(32, frameW);
+      frameH = Math.max(24, frameH);
+    }
+
+    mapFrame.style.width = `${Math.round(frameW)}px`;
+    mapFrame.style.height = `${Math.round(frameH)}px`;
+  }
+
   function updateMap() {
     if (!mapFrame || worldWidth <= 0 || worldHeight <= 0) return;
 
+    updateMapFrameSize();
     updateScrollRoute();
 
     for (const el of sectionEls) {
@@ -589,7 +862,7 @@ export function initScatterWorks(container: HTMLElement) {
         slot.w = w;
         slot.h = h;
 
-        const { cx, cy } = categoryAnchorPoint(slot);
+        const { cx, cy } = categoryAnchorPoint(slot, el);
         return {
           el,
           cx,
@@ -611,69 +884,253 @@ export function initScatterWorks(container: HTMLElement) {
     scrollTrack.style.height = `${steps * SCROLL_STEP_VH * 100}vh`;
   }
 
+  function scrollRange() {
+    return Math.max(1, scrollTrack.offsetHeight - viewportHeight);
+  }
+
   function getScrollProgress(): number {
-    const range = Math.max(
-      1,
-      scrollTrack.offsetHeight - viewportHeight,
-    );
     const y = window.scrollY - scrollTrack.offsetTop;
-    return Math.min(1, Math.max(0, y / range));
+    return Math.min(1, Math.max(0, y / scrollRange()));
+  }
+
+  function applyScrollProgress(progress: number, syncWindow = true) {
+    scrollProgress = Math.min(1, Math.max(0, progress));
+    setCameraTargetForSection(activeScrollElement());
+    viewX = targetViewX;
+    viewY = targetViewY;
+    viewAngle = targetViewAngle;
+    clampView();
+
+    if (!syncWindow) return;
+
+    suppressScrollCamera = true;
+    window.scrollTo(0, scrollTrack.offsetTop + scrollProgress * scrollRange());
+    requestAnimationFrame(() => {
+      suppressScrollCamera = false;
+    });
+  }
+
+  function isNarrowViewport() {
+    return viewportWidth <= 768;
+  }
+
+  function isCameraInteracting() {
+    return touchScroll !== null || pan !== null;
   }
 
   function cameraViewportAnchor() {
-    return { x: headerAlign, y: TOP_PAD };
-  }
-
-  function cameraAtScrollProgress(p: number) {
-    const anchor = cameraViewportAnchor();
-
-    if (scrollAnchors.length === 0) {
-      return { viewX: 0, viewY: 0, angle: 0 };
-    }
-    if (scrollAnchors.length === 1) {
-      const a = scrollAnchors[0];
-      return {
-        viewX: a.cx - anchor.x,
-        viewY: a.cy - anchor.y,
-        angle: -a.rot,
-      };
-    }
-
-    const pos = p * (scrollAnchors.length - 1);
-    const i = Math.min(scrollAnchors.length - 2, Math.floor(pos));
-    const t = pos - i;
-    const a = scrollAnchors[i];
-    const b = scrollAnchors[i + 1];
-
+    const root = getComputedStyle(document.documentElement);
+    const gutter = parseFloat(root.getPropertyValue("--page-gutter")) || PAD;
+    const narrow = isNarrowViewport();
     return {
-      viewX: a.cx + (b.cx - a.cx) * t - anchor.x,
-      viewY: a.cy + (b.cy - a.cy) * t - anchor.y,
-      angle: -(a.rot + (b.rot - a.rot) * t),
+      x: narrow ? gutter : headerAlign,
+      y: narrow ? 36 : TOP_PAD,
     };
   }
 
-  function syncCameraFromScroll() {
-    scrollProgress = getScrollProgress();
-    const cam = cameraAtScrollProgress(scrollProgress);
+  function cameraAtSlot(slot: ScatterSlot, el?: HTMLElement) {
+    const anchor = cameraViewportAnchor();
+    const { cx, cy } = categoryAnchorPoint(slot, el);
+
+    return {
+      viewX: cx - anchor.x,
+      viewY: cy - anchor.y,
+      angle: -displayRot(slot),
+    };
+  }
+
+  function activeScrollElement() {
+    if (scrollAnchors.length === 0) return null;
+    const progress = scrollOrderProgress();
+    const activeIndex = Math.round(progress * Math.max(0, scrollAnchors.length - 1));
+    return scrollAnchors[activeIndex]?.el ?? null;
+  }
+
+  function titleAnchorScreenPoint(el: HTMLElement) {
+    const cRect = container.getBoundingClientRect();
+    const summary =
+      el.querySelector<HTMLElement>(".work-section__summary") ?? el;
+    const title = summary.querySelector<HTMLElement>(".work-section__title");
+    const anchor = cameraViewportAnchor();
+
+    if (title) {
+      const tRect = title.getBoundingClientRect();
+      return {
+        x: tRect.left - cRect.left,
+        y: tRect.top - cRect.top + tRect.height * 0.72,
+        anchor,
+      };
+    }
+
+    const sRect = summary.getBoundingClientRect();
+    return {
+      x: sRect.left - cRect.left,
+      y: sRect.top - cRect.top + sRect.height * 0.38,
+      anchor,
+    };
+  }
+
+  function refineCameraToTitle(el: HTMLElement | null) {
+    if (!el) return;
+
+    const { x, y, anchor } = titleAnchorScreenPoint(el);
+    targetViewX = viewX + (x - anchor.x);
+    targetViewY = viewY + (y - anchor.y);
+  }
+
+  function setCameraTargetForSection(el: HTMLElement | null) {
+    if (!el) return;
+
+    const slot = slots.get(slotKey(el));
+    if (!slot) return;
+
+    const angle = -displayRot(slot);
+    const cam = cameraAtSlot(slot, el);
+    const savedViewX = viewX;
+    const savedViewY = viewY;
+    const savedViewAngle = viewAngle;
+
+    targetViewAngle = angle;
     targetViewX = cam.viewX;
     targetViewY = cam.viewY;
-    targetViewAngle = cam.angle;
+    viewX = targetViewX;
+    viewY = targetViewY;
+    viewAngle = targetViewAngle;
+    applyCamera();
+    refineCameraToTitle(el);
+
+    viewX = savedViewX;
+    viewY = savedViewY;
+    viewAngle = savedViewAngle;
+    applyCamera();
     clampView();
   }
 
+  function snapCameraToTitle(el: HTMLElement | null) {
+    if (!el) return;
+    setCameraTargetForSection(el);
+    viewX = targetViewX;
+    viewY = targetViewY;
+    viewAngle = targetViewAngle;
+    applyCamera();
+    clampView();
+  }
+
+  function pinInitialView() {
+    if (scrollAnchors.length === 0) return;
+
+    scrollDriving = true;
+    scrollProgress = 0;
+    cameraGlide = false;
+    clearFocus();
+
+    suppressScrollCamera = true;
+    window.scrollTo(0, scrollTrack.offsetTop);
+    requestAnimationFrame(() => {
+      suppressScrollCamera = false;
+    });
+
+    snapCameraToTitle(scrollAnchors[0]?.el ?? null);
+    syncedSectionIndex = 0;
+    updateMap();
+  }
+
+  function syncCameraFromScroll() {
+    if (isNarrowViewport() && !userHasNavigated) {
+      pinInitialView();
+      return;
+    }
+
+    scrollProgress = getScrollProgress();
+    if (isNarrowViewport()) {
+      scrollProgress = progressFromSectionIndex(
+        sectionIndexFromProgress(scrollProgress),
+      );
+    }
+    const activeEl = activeScrollElement();
+    const activeIndex = activeEl
+      ? scrollAnchors.findIndex((anchor) => anchor.el === activeEl)
+      : -1;
+    const sectionChanged =
+      activeIndex >= 0 && activeIndex !== syncedSectionIndex;
+
+    if (cameraGlide && sectionChanged) {
+      setCameraTargetForSection(activeEl);
+      syncedSectionIndex = activeIndex;
+    } else if (!cameraGlide) {
+      setCameraTargetForSection(activeEl);
+      if (isNarrowViewport()) {
+        if (!isCameraInteracting()) {
+          viewX = targetViewX;
+          viewY = targetViewY;
+          viewAngle = targetViewAngle;
+        }
+      } else if (sectionChanged) {
+        cameraGlide = true;
+      }
+      if (activeIndex >= 0) syncedSectionIndex = activeIndex;
+    }
+    clampView();
+  }
+
+  function cameraLerpRate() {
+    if (touchScroll?.scrolling) return 1;
+    if (cameraGlide) return CAMERA_LERP_GLIDE;
+    if (isNarrowViewport() && !isCameraInteracting()) return 1;
+    if (!isNarrowViewport()) return CAMERA_LERP;
+    if (isCameraInteracting()) return CAMERA_LERP;
+    return 1;
+  }
+
+  function angleLerpRate() {
+    if (touchScroll?.scrolling) return 1;
+    if (cameraGlide) return ANGLE_LERP_GLIDE;
+    if (isNarrowViewport() && !isCameraInteracting()) return 1;
+    if (!isNarrowViewport()) return ANGLE_LERP;
+    if (isCameraInteracting()) return ANGLE_LERP;
+    return 1;
+  }
+
+  function settleCameraGlide() {
+    if (!cameraGlide) return;
+    const settled =
+      Math.hypot(targetViewX - viewX, targetViewY - viewY) < 0.75 &&
+      Math.abs(targetViewAngle - viewAngle) < 0.003;
+    if (!settled) return;
+    viewX = targetViewX;
+    viewY = targetViewY;
+    viewAngle = targetViewAngle;
+    cameraGlide = false;
+  }
+
   function onScroll() {
-    if (focusEl || pan) return;
+    if (focusEl || pan || suppressScrollCamera) return;
+    if (isNarrowViewport() && !userHasNavigated) return;
     scrollDriving = true;
     syncCameraFromScroll();
   }
 
   function applyCamera() {
-    const cx = viewportWidth / 2;
-    const cy = viewportHeight / 2;
-    world.style.transform = `translate(${cx}px, ${cy}px) rotate(${viewAngle}rad) translate(${-cx - viewX}px, ${-cy - viewY}px)`;
+    const { x: ax, y: ay } = cameraViewportAnchor();
+    world.style.transform = `translate(${ax}px, ${ay}px) rotate(${viewAngle}rad) translate(${-ax - viewX}px, ${-ay - viewY}px)`;
+  }
+
+  function ensureWorldFitsViewTarget() {
+    const minWidth = Math.ceil(targetViewX + viewportWidth + PAD);
+    const minHeight = Math.ceil(targetViewY + viewportHeight + PAD);
+
+    if (minWidth > worldWidth) {
+      worldWidth = minWidth;
+      world.style.width = `${worldWidth}px`;
+    }
+    if (minHeight > worldHeight) {
+      worldHeight = minHeight;
+      world.style.height = `${worldHeight}px`;
+    }
   }
 
   function clampView() {
+    ensureWorldFitsViewTarget();
     const maxX = Math.max(0, worldWidth - viewportWidth);
     const maxY = Math.max(0, worldHeight - viewportHeight);
     viewX = Math.min(maxX, Math.max(0, viewX));
@@ -682,31 +1139,23 @@ export function initScatterWorks(container: HTMLElement) {
     targetViewY = Math.min(maxY, Math.max(0, targetViewY));
   }
 
-  function updateFocusFromDOM() {
-    if (!focusEl) return;
-
-    const cRect = container.getBoundingClientRect();
-    const summary =
-      focusEl.querySelector<HTMLElement>(".work-section__summary") ?? focusEl;
-    const eRect = summary.getBoundingClientRect();
-    const anchor = cameraViewportAnchor();
-    const elLeft = eRect.left - cRect.left;
-    const elTop = eRect.top - cRect.top;
-    const dx = elLeft - anchor.x;
-    const dy = elTop - anchor.y;
-
-    targetViewX = viewX + dx;
-    targetViewY = viewY + dy;
-    clampView();
-  }
-
-  function focusCamera(el: HTMLElement) {
+  function focusCamera(el: HTMLElement, animate = false) {
     const slot = slots.get(slotKey(el));
     if (!slot) return;
 
     focusEl = el;
-    targetViewAngle = -displayRot(slot);
-    updateFocusFromDOM();
+    setCameraTargetForSection(el);
+    const focusIndex = scrollAnchors.findIndex((anchor) => anchor.el === el);
+    if (focusIndex >= 0) syncedSectionIndex = focusIndex;
+    if (animate) {
+      cameraGlide = true;
+    } else {
+      cameraGlide = false;
+      viewX = targetViewX;
+      viewY = targetViewY;
+      viewAngle = targetViewAngle;
+    }
+    clampView();
   }
 
   function clearFocus() {
@@ -977,8 +1426,9 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function layout() {
-    viewportWidth = Math.max(280, container.clientWidth);
-    viewportHeight = Math.max(420, container.clientHeight);
+    const measured = readViewportSize();
+    viewportWidth = measured.w;
+    viewportHeight = measured.h;
     headerAlign = readHeaderAlign();
     worldWidth = Math.max(
       viewportWidth * WORLD_WIDTH_RATIO,
@@ -1033,11 +1483,17 @@ export function initScatterWorks(container: HTMLElement) {
     updateScrollTrack();
 
     if (focusEl) {
-      const slot = slots.get(slotKey(focusEl));
-      if (slot) targetViewAngle = -displayRot(slot);
-      updateFocusFromDOM();
+      if (!cameraGlide) {
+        snapCameraToTitle(focusEl);
+      } else {
+        setCameraTargetForSection(focusEl);
+      }
     } else if (scrollDriving) {
-      syncCameraFromScroll();
+      if (isNarrowViewport() && !userHasNavigated) {
+        pinInitialView();
+      } else {
+        syncCameraFromScroll();
+      }
     }
 
     clampView();
@@ -1052,6 +1508,20 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function onPointerDown(event: PointerEvent) {
+    if (event.pointerType === "touch") {
+      if (!shouldHandleTouchScroll(event)) return;
+
+      touchScroll = {
+        startX: event.clientX,
+        startY: event.clientY,
+        progress0: getScrollProgress(),
+        sectionIndex0: sectionIndexFromProgress(getScrollProgress()),
+        scrolling: false,
+      };
+      event.preventDefault();
+      return;
+    }
+
     if (hitSection(event.clientX, event.clientY)) return;
 
     pan = {
@@ -1067,6 +1537,31 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function onPointerMove(event: PointerEvent) {
+    if (touchScroll && event.pointerType === "touch") {
+      const dy = touchScroll.startY - event.clientY;
+      const dx = touchScroll.startX - event.clientX;
+
+      if (!touchScroll.scrolling) {
+        const dist = Math.hypot(dx, dy);
+        if (dist > touchScrollThreshold()) {
+          touchScroll.scrolling = Math.abs(dy) >= Math.abs(dx);
+        }
+      }
+
+      if (touchScroll.scrolling) {
+        event.preventDefault();
+        if (!isNarrowViewport()) {
+          clearFocus();
+          cameraGlide = false;
+          scrollDriving = true;
+          applyScrollProgress(touchScroll.progress0 + dy / scrollRange());
+          applyCamera();
+          updateMap();
+        }
+      }
+      return;
+    }
+
     if (!pan) return;
 
     viewX = pan.viewX0 - (event.clientX - pan.startX);
@@ -1079,6 +1574,31 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function onPointerUp(event: PointerEvent) {
+    if (touchScroll && event.pointerType === "touch") {
+      if (touchScroll.scrolling) {
+        event.preventDefault();
+        const dy = touchScroll.startY - event.clientY;
+
+        if (isNarrowViewport()) {
+          let targetIndex = touchScroll.sectionIndex0;
+          if (dy < -SWIPE_SECTION_THRESHOLD) {
+            targetIndex += 1;
+          } else if (dy > SWIPE_SECTION_THRESHOLD) {
+            targetIndex -= 1;
+          }
+          navigateToSectionIndex(
+            targetIndex,
+            targetIndex !== touchScroll.sectionIndex0,
+          );
+        } else {
+          const progress = touchScroll.progress0 + dy / scrollRange();
+          navigateToSectionIndex(sectionIndexFromProgress(progress), false);
+        }
+      }
+      touchScroll = null;
+      return;
+    }
+
     if (pan) {
       pan = null;
       try {
@@ -1102,6 +1622,7 @@ export function initScatterWorks(container: HTMLElement) {
       return;
     }
 
+    markUserNavigated();
     window.scrollBy({ top: event.deltaY, left: event.deltaX });
     scrollDriving = true;
     syncCameraFromScroll();
@@ -1109,23 +1630,25 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   function loop() {
-    if (focusEl) {
+    const interacting = isCameraInteracting();
+
+    if (focusEl && !cameraGlide) {
       const slot = slots.get(slotKey(focusEl));
       if (slot) targetViewAngle = -displayRot(slot);
-      updateFocusFromDOM();
-    } else if (scrollDriving) {
+    } else if (scrollDriving && interacting && !touchScroll?.scrolling) {
       scrollProgress = getScrollProgress();
-      const cam = cameraAtScrollProgress(scrollProgress);
-      targetViewX = cam.viewX;
-      targetViewY = cam.viewY;
-      targetViewAngle = cam.angle;
+      setCameraTargetForSection(activeScrollElement());
       clampView();
     }
 
-    viewX += (targetViewX - viewX) * CAMERA_LERP;
-    viewY += (targetViewY - viewY) * CAMERA_LERP;
-    viewAngle += (targetViewAngle - viewAngle) * ANGLE_LERP;
+    const cameraLerp = cameraLerpRate();
+    const angleLerp = angleLerpRate();
+
+    viewX += (targetViewX - viewX) * cameraLerp;
+    viewY += (targetViewY - viewY) * cameraLerp;
+    viewAngle += (targetViewAngle - viewAngle) * angleLerp;
     clampView();
+    settleCameraGlide();
     applyCamera();
     updateMap();
 
@@ -1133,19 +1656,26 @@ export function initScatterWorks(container: HTMLElement) {
   }
 
   layout();
-
-  scrollDriving = true;
-  syncCameraFromScroll();
-
+  pinInitialView();
   loop();
 
   let timer = 0;
   const scheduleLayout = () => {
+    if (touchScroll?.scrolling) return;
     window.clearTimeout(timer);
     timer = window.setTimeout(layout, 120);
   };
 
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      if (userHasNavigated) return;
+      layout();
+      pinInitialView();
+    });
+  }
+
   mapFrame?.addEventListener("click", onMapFrameClick);
+  mapRoute?.addEventListener("click", onMapRouteClick);
 
   container.addEventListener("pointerdown", onPointerDown);
   container.addEventListener("pointermove", onPointerMove);
@@ -1170,6 +1700,7 @@ export function initScatterWorks(container: HTMLElement) {
     }
     mapMarkers.clear();
     mapFrame?.removeEventListener("click", onMapFrameClick);
+    mapRoute?.removeEventListener("click", onMapRouteClick);
     for (const unsub of summaryUnsubs) unsub();
     container.removeEventListener("pointerdown", onPointerDown);
     container.removeEventListener("pointermove", onPointerMove);

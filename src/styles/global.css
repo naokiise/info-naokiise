@@ -27,8 +27,8 @@ html.theme-light {
 html.theme-dark {
   --text: rgba(255, 255, 255, 0.9);
   --text-secondary: rgba(255, 255, 255, 0.65);
-  --bg: #1a1a1a;
-  --surface: #1a1a1a;
+  --bg: color-mix(in srgb, #000 80%, #fff);
+  --surface: color-mix(in srgb, #000 80%, #fff);
   --row-fill: transparent;
   --border: rgba(255, 255, 255, 0.13);
   --navbar-shadow: none;
@@ -42,6 +42,7 @@ html.theme-dark {
 }
 
 html {
+  overscroll-behavior: none;
   font-family: var(--font-latin);
   font-size: 16px;
   font-weight: 400;
@@ -49,6 +50,8 @@ html {
   font-synthesis: none;
   font-kerning: normal;
   text-autospace: no-autospace;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -80,6 +83,7 @@ html {
 
 body {
   margin: 0;
+  overscroll-behavior: none;
   font: inherit;
   color: var(--text);
   background: var(--bg);
@@ -225,8 +229,6 @@ html:has(.works--scatter) {
 
 .works-map__frame {
   position: absolute;
-  width: 148px;
-  height: 96px;
   left: var(--header-align);
   bottom: 16px;
   border: 1px solid var(--border);
@@ -234,6 +236,7 @@ html:has(.works--scatter) {
   background: var(--bg);
   cursor: pointer;
   pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .works-map__route {
@@ -254,19 +257,23 @@ html:has(.works--scatter) {
   opacity: 0.7;
 }
 
+.works-map__route-points .works-map__route-node {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .works-map__route-point {
   fill: var(--bg);
   stroke: var(--text);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   opacity: 0.75;
+  pointer-events: auto;
 }
 
-.works-map__route-point--active {
-  opacity: 0.9;
-}
-
+.works-map__route-point--active,
 .works-map__route-point--focus {
+  fill: #fff;
   opacity: 1;
 }
 
@@ -274,6 +281,8 @@ html:has(.works--scatter) {
   fill: var(--text);
   font-family: var(--font-latin);
   font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.08em;
   pointer-events: none;
   opacity: 0.85;
 }
@@ -379,6 +388,7 @@ html:has(.works--scatter) {
 
 .works--scatter .work-section__summary {
   padding: 12px 0 4px;
+  touch-action: manipulation;
 }
 
 .work-section__summary {
@@ -507,16 +517,42 @@ html:has(.works--scatter) {
   html.theme-light,
   html.theme-dark {
     --page-gutter: 24px;
+    --font-size-ja: 0.86em;
+    --font-size-latin-body: calc(var(--font-size-ja) * 1.1);
+  }
+
+  html {
+    font-size: 14px;
+  }
+
+  .navbar__logo {
+    font-size: 18px;
+  }
+
+  .work-section__summary {
+    font-size: 18px;
+  }
+
+  .work-list {
+    font-size: 13px;
+  }
+
+  .work-item__year {
+    font-size: 13px;
+  }
+
+  .works--scatter {
+    height: calc(100vh - var(--navbar-height, 45px) - 72px) !important;
   }
 
   .works-map {
-    min-height: 96px;
+    min-height: 72px;
   }
 
   .works-map__frame {
-    width: 120px;
-    height: 78px;
-    left: var(--page-gutter);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
     bottom: 16px;
   }
 
