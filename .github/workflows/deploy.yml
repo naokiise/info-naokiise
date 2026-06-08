@@ -55,8 +55,9 @@ jobs:
           git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/naokiise/naokiise.github.io.git" site
           rm -rf site/info
           cp -r dist-info site/info
+          touch site/.nojekyll
           cd site
-          git add info
+          git add info .nojekyll
           if git diff --staged --quiet; then
             echo "No changes to deploy."
             exit 0

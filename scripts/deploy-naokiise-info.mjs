@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execSync } from "node:child_process";
@@ -24,7 +24,13 @@ try {
 
   cpSync(dist, infoDir, { recursive: true });
 
-  execSync("git add info", { cwd: workDir, stdio: "inherit" });
+  // GitHub Pages runs Jekyll by default and ignores paths like info/_astro/.
+  const noJekyll = join(workDir, ".nojekyll");
+  if (!existsSync(noJekyll)) {
+    writeFileSync(noJekyll, "");
+  }
+
+  execSync("git add info .nojekyll", { cwd: workDir, stdio: "inherit" });
 
   const status = execSync("git status --porcelain", {
     cwd: workDir,
