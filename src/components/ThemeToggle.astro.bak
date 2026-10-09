@@ -1,0 +1,76 @@
+<button id="theme-toggle" class="icon-btn" type="button" aria-label="テーマ切替">
+  <svg
+    id="icon-moon"
+    class="theme-toggle__icon"
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+  </svg>
+  <svg
+    id="icon-sun"
+    class="theme-toggle__icon theme-toggle__icon--hidden"
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2"></path>
+    <path d="M12 20v2"></path>
+    <path d="m4.93 4.93 1.41 1.41"></path>
+    <path d="m17.66 17.66 1.41 1.41"></path>
+    <path d="M2 12h2"></path>
+    <path d="M20 12h2"></path>
+    <path d="m6.34 17.66-1.41 1.41"></path>
+    <path d="m19.07 4.93-1.41 1.41"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle__icon--hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  const html = document.documentElement;
+  const btn = document.getElementById("theme-toggle");
+  const iconMoon = document.getElementById("icon-moon");
+  const iconSun = document.getElementById("icon-sun");
+
+  function syncIcons() {
+    const isDark = html.classList.contains("theme-dark");
+    iconMoon?.classList.toggle("theme-toggle__icon--hidden", isDark);
+    iconSun?.classList.toggle("theme-toggle__icon--hidden", !isDark);
+    btn?.setAttribute(
+      "aria-label",
+      isDark ? "ライトモードに切り替え" : "ダークモードに切り替え",
+    );
+  }
+
+  syncIcons();
+
+  btn?.addEventListener("click", () => {
+    const isDark = html.classList.contains("theme-dark");
+    const nextDark = !isDark;
+    html.classList.remove("theme-light", "theme-dark");
+    html.classList.add(nextDark ? "theme-dark" : "theme-light");
+    localStorage.setItem("color-preference", nextDark ? "dark" : "light");
+    syncIcons();
+  });
+</script>

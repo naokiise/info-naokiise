@@ -1,20 +1,21 @@
 export interface WorkRow {
   year: string;
   title: string;
-  href?: string;
   venue?: string;
   text?: string;
   publisher?: string;
+  /** Path under public/, e.g. "images/works/foo.jpg" */
+  image?: string;
+  /** External URL shown as a clickable link on the node */
+  link?: string;
+  /** YouTube video ID (the XXXX in youtube.com/watch?v=XXXX) */
+  youtube?: string;
+  section?: string;
 }
 
 export interface WorkSection {
   name: string;
   columns: string[];
   rows: WorkRow[];
-  /** No row/card background (Notion-style nofill) */
   nofill?: boolean;
-}
-
-export interface SiteData {
-  sections: WorkSection[];
 }

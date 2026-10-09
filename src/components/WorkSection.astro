@@ -12,6 +12,8 @@ const sectionId = slugify(section.name);
 const hasVenue = section.columns.includes("venue");
 const hasText = section.columns.includes("text");
 const hasPublisher = section.columns.includes("publisher");
+const hasLink = section.columns.includes("link");
+const hasYoutube = section.columns.includes("youtube");
 ---
 
 <div
@@ -39,6 +41,20 @@ const hasPublisher = section.columns.includes("publisher");
                   class="work-item__meta"
                   set:html={compositeFontHtml(row.publisher)}
                 />
+              )}
+              {hasLink && row.link && (
+                <p class="work-item__meta">
+                  <a href={row.link} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                    {new URL(row.link).hostname}
+                  </a>
+                </p>
+              )}
+              {hasYoutube && row.youtube && (
+                <p class="work-item__meta">
+                  <a href={`https://youtube.com/watch?v=${row.youtube}`} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                    YouTube
+                  </a>
+                </p>
               )}
             </div>
           </li>

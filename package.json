@@ -8,11 +8,14 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "deploy": "astro build && node scripts/deploy-naokiise-info.mjs",
+    "deploy": "npm run build && node scripts/deploy-naokiise-info.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "notion": "node scripts/notion-sync.mjs",
+    "prebuild": "node scripts/notion-sync.mjs"
   },
   "dependencies": {
+    "@astrojs/mdx": "^6.0.3",
     "astro": "^6.4.3"
   }
 }

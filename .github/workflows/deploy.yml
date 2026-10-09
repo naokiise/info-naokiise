@@ -1,9 +1,12 @@
-name: Deploy to naokiise.com/info
+name: Deploy to naokiise.com
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Re-read Notion and redeploy automatically (every 3 hours; times are UTC)
+  schedule:
+    - cron: "0 */3 * * *"
 
 permissions:
   contents: read
@@ -25,6 +28,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: npm run build
 
       - name: Upload artifact
@@ -53,16 +58,18 @@ jobs:
             exit 0
           fi
           git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/naokiise/naokiise.github.io.git" site
-          rm -rf site/info
-          cp -r dist-info site/info
+          rm -rf site/index.html site/_astro site/work site/timeline site/images site/info
+          cp -r dist-info/. site/
+          mkdir -p site/info
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/"><link rel="canonical" href="https://naokiise.com/"><a href="/">naokiise.com</a>' > site/info/index.html
           touch site/.nojekyll
           cd site
-          git add info .nojekyll
+          git add -A
           if git diff --staged --quiet; then
             echo "No changes to deploy."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Deploy info site to /info"
+          git commit -m "Deploy info site to top"
           git push origin main

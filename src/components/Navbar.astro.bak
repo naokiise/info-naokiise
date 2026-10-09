@@ -1,0 +1,11 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+---
+
+<header class="navbar">
+  <div class="navbar__inner">
+    <div class="navbar__actions">
+      <ThemeToggle />
+    </div>
+  </div>
+</header>

@@ -1,0 +1,253 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Header2D from "../../components/Header2D.astro";
+import { frontmatter } from "../../data/works.md";
+import type { WorkRow } from "../../lib/types";
+import { compositeFontHtml } from "../../lib/typography";
+import { getWorkId } from "../../lib/slug";
+import pagesData from "../../data/work-pages.json";
+
+type Block = { type: string; html?: string; src?: string; caption?: string; id?: string; url?: string };
+
+export async function getStaticPaths() {
+  const works = frontmatter.works as (WorkRow & { section: string })[];
+  const filteredWorks = works.filter(work => work.section !== "Educational background");
+  const sortedWorks = [...filteredWorks].sort((a, b) => {
+    const yearA = parseInt(a.year) || 0;
+    const yearB = parseInt(b.year) || 0;
+    return yearB - yearA;
+  });
+  
+  return sortedWorks.map((work) => ({
+    params: { id: getWorkId(work) },
+    props: { work }
+  }));
+}
+
+const { work } = Astro.props;
+const blocks: Block[] = (pagesData as Record<string, Block[]>)[getWorkId(work)] ?? [];
+const base = import.meta.env.BASE_URL;
+
+// Helper function to get hostname from URL
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+---
+
+<Layout title={work.title}>
+  <Navbar back />
+  <Header2D />
+  <main class="content">
+    <article class="work-detail">
+      <header class="work-detail__head">
+        <div class="work-detail__year font-inter" lang="en">{work.year}</div>
+        <h1 class="work-detail__title" set:html={compositeFontHtml(work.title)} />
+        {work.text && <p class="work-detail__meta" set:html={compositeFontHtml(work.text)} />}
+        {work.venue && <p class="work-detail__meta" set:html={compositeFontHtml(work.venue)} />}
+        {work.publisher && <p class="work-detail__meta" set:html={compositeFontHtml(work.publisher)} />}
+        {work.link && (
+          <p class="work-detail__meta">
+            <a href={work.link} target="_blank" rel="noopener noreferrer" class="work-detail__link">{getHostname(work.link)}</a>
+          </p>
+        )}
+      </header>
+      <div class="work-detail__body">
+        {blocks.length === 0 && work.image && (
+          <img class="work-detail__image" src={base + work.image.replace(/^\//, "")} alt={work.title} />
+        )}
+        {blocks.map((b) =>
+          b.type === "image" ? (
+            <figure class="work-detail__figure">
+              <img class="work-detail__image" src={base + (b.src ?? "").replace(/^\//, "")} alt="" loading="lazy" />
+              {b.caption && <figcaption set:html={b.caption} />}
+            </figure>
+          ) : b.type === "h" ? (
+            <h2 class="work-detail__h" set:html={b.html} />
+          ) : b.type === "li" ? (
+            <p class="work-detail__li" set:html={"– " + b.html} />
+          ) : b.type === "quote" ? (
+            <blockquote class="work-detail__quote" set:html={b.html} />
+          ) : b.type === "youtube" ? (
+            <div class="work-detail__video">
+              <iframe src={`https://www.youtube.com/embed/${b.id}`} title="YouTube" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            </div>
+          ) : b.type === "link" ? (
+            <p class="work-detail__p"><a class="work-detail__link" href={b.url} target="_blank" rel="noopener noreferrer">{getHostname(b.url ?? "")}</a></p>
+          ) : (
+            <p class="work-detail__p" set:html={b.html} />
+          )
+        )}
+      </div>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  .work-detail {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding-top: 24px;
+  }
+
+  .work-detail__back {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+
+  .work-detail__back:hover {
+    text-decoration: underline;
+  }
+
+  .work-detail__year {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .work-detail__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .work-detail__category {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .work-detail__title {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .work-detail__meta {
+    font-size: 12px;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .work-detail__link {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .work-detail__link:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .work-detail__head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+
+  .work-detail__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 640px;
+  }
+
+  .work-detail__image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .work-detail__figure {
+    margin: 0;
+  }
+
+  .work-detail__figure figcaption {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+
+  .work-detail__p,
+  .work-detail__li,
+  .work-detail__quote {
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 0;
+    color: var(--text);
+  }
+
+  .work-detail__quote {
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
+  }
+
+  .work-detail__h {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 16px 0 0;
+  }
+
+  .work-detail__video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+  }
+
+  .work-detail__video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .work-detail a {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .work-detail__body :global(a) {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .work-detail__back {
+      font-size: 11px;
+    }
+
+    .work-detail__year {
+      font-size: 11px;
+    }
+
+    .work-detail__category {
+      font-size: 11px;
+    }
+
+    .work-detail__title {
+      font-size: 14px;
+    }
+
+    .work-detail__meta {
+      font-size: 11px;
+    }
+  }
+</style>

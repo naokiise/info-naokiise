@@ -1,0 +1,174 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Header2D from "../../components/Header2D.astro";
+import { frontmatter } from "../../data/works.md";
+import type { WorkRow } from "../../lib/types";
+import { compositeFontHtml } from "../../lib/typography";
+import { getWorkId } from "../../lib/slug";
+
+export async function getStaticPaths() {
+  const works = frontmatter.works as (WorkRow & { section: string })[];
+  const filteredWorks = works.filter(work => work.section !== "Educational background");
+  const sortedWorks = [...filteredWorks].sort((a, b) => {
+    const yearA = parseInt(a.year) || 0;
+    const yearB = parseInt(b.year) || 0;
+    return yearB - yearA;
+  });
+  
+  return sortedWorks.map((work) => ({
+    params: { id: getWorkId(work) },
+    props: { work }
+  }));
+}
+
+const { work } = Astro.props;
+
+// Helper function to get hostname from URL
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+---
+
+<Layout title={work.title}>
+  <Navbar />
+  <Header2D />
+  <main class="content">
+    <div class="work-detail">
+      <a href="/" class="work-detail__back">← Back</a>
+      <div class="work-detail__year font-inter" lang="en">{work.year}</div>
+      <div class="work-detail__content">
+        <p class="work-detail__category">{work.section}</p>
+        <h1 class="work-detail__title" set:html={compositeFontHtml(work.title)} />
+        {work.text && (
+          <p class="work-detail__meta" set:html={compositeFontHtml(work.text)} />
+        )}
+        {work.venue && (
+          <p class="work-detail__meta" set:html={compositeFontHtml(work.venue)} />
+        )}
+        {work.publisher && (
+          <p class="work-detail__meta" set:html={compositeFontHtml(work.publisher)} />
+        )}
+        {work.link && (
+          <p class="work-detail__meta">
+            <a href={work.link} target="_blank" rel="noopener noreferrer" class="work-detail__link">
+              {getHostname(work.link)}
+            </a>
+          </p>
+        )}
+        {work.youtube && (
+          <p class="work-detail__meta">
+            <a href={`https://youtube.com/watch?v=${work.youtube}`} target="_blank" rel="noopener noreferrer" class="work-detail__link">
+              YouTube
+            </a>
+          </p>
+        )}
+        {work.image && (
+          <img 
+            class="work-detail__image" 
+            src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} 
+            alt={work.title}
+          />
+        )}
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .work-detail {
+    max-width: var(--content-max);
+    margin: 0 auto;
+  }
+
+  .work-detail__back {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+
+  .work-detail__back:hover {
+    text-decoration: underline;
+  }
+
+  .work-detail__year {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .work-detail__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .work-detail__category {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .work-detail__title {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .work-detail__meta {
+    font-size: 12px;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .work-detail__link {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .work-detail__link:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .work-detail__image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .work-detail__back {
+      font-size: 11px;
+    }
+
+    .work-detail__year {
+      font-size: 11px;
+    }
+
+    .work-detail__category {
+      font-size: 11px;
+    }
+
+    .work-detail__title {
+      font-size: 14px;
+    }
+
+    .work-detail__meta {
+      font-size: 11px;
+    }
+  }
+</style>

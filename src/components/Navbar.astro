@@ -1,12 +1,120 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+
+interface Props {
+  back?: boolean;
+}
+const { back = false } = Astro.props;
 ---
 
 <header class="navbar">
   <div class="navbar__inner">
-    <a class="navbar__logo" href="https://naokiise.com/">Naoki Ise</a>
+    <div>{back && <a class="navbar__back" href={import.meta.env.BASE_URL}>← Back</a>}</div>
+    <div></div>
     <div class="navbar__actions">
+      <button id="gray-toggle" class="navbar__text-toggle" type="button" aria-pressed="false">picture: color</button>
+      <span class="navbar__sep" aria-hidden="true">|</span>
+      <button id="text-toggle" class="navbar__text-toggle" type="button" aria-pressed="true">text: on</button>
+      <span class="navbar__sep" aria-hidden="true">|</span>
       <ThemeToggle />
     </div>
   </div>
 </header>
+
+<script>
+  // Project texts: "text off" turns every character into "-", "text random" into random letters (layout stays the same).
+  const textBtn = document.getElementById("text-toggle");
+  const root = document.documentElement;
+  const originals = new WeakMap<Text, string>();
+
+  function textNodes(): Text[] {
+    const out: Text[] = [];
+    document.querySelectorAll(".work-item__body").forEach((el) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) out.push(walker.currentNode as Text);
+    });
+    return out;
+  }
+
+  // text on → text off ("-") → text random (random letters) → text on
+  const textModes = ["on", "off", "random"] as const;
+  let textMode = 0;
+  const RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const randomChar = () => RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)];
+
+  function setTexts(mode: (typeof textModes)[number]) {
+    root.classList.toggle("texts-off", mode !== "on");
+    for (const node of textNodes()) {
+      if (!originals.has(node)) originals.set(node, node.data);
+      const original = originals.get(node)!;
+      node.data =
+        mode === "on" ? original
+        : mode === "off" ? original.replace(/\S/gu, "-")
+        : original.replace(/\S/gu, randomChar);
+    }
+    if (textBtn) {
+      textBtn.textContent = `text: ${mode}`;
+      textBtn.setAttribute("aria-pressed", String(mode === "on"));
+    }
+  }
+
+  textBtn?.addEventListener("click", () => {
+    textMode = (textMode + 1) % textModes.length;
+    setTexts(textModes[textMode]);
+  });
+
+  // Pictures: color → gray → random → off → color
+  const grayBtn = document.getElementById("gray-toggle");
+  const tones = ["color", "gray", "random", "off"];
+  let tone = 0;
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  // Duotone filter: black → (r, g, b), white → white
+  function duotone(id: string, r: number, g: number, b: number) {
+    const filter = document.createElementNS(SVG_NS, "filter");
+    filter.id = id;
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+    const m = document.createElementNS(SVG_NS, "feColorMatrix");
+    m.setAttribute("type", "matrix");
+    const row = (c: number) => `${(1 - c) * 0.2126} ${(1 - c) * 0.7152} ${(1 - c) * 0.0722} 0 ${c}`;
+    m.setAttribute("values", `${row(r)} ${row(g)} ${row(b)} 0 0 0 1 0`);
+    filter.appendChild(m);
+    return filter;
+  }
+
+  function randomColor(): [number, number, number] {
+    // vivid colour: random hue, full saturation, mid lightness
+    const h = Math.random() * 6;
+    const x = 1 - Math.abs((h % 2) - 1);
+    const [r, g, b] = [[1, x, 0], [x, 1, 0], [0, 1, x], [0, x, 1], [x, 0, 1], [1, 0, x]][Math.floor(h)];
+    return [r, g, b];
+  }
+
+  function applyRandom(on: boolean) {
+    document.getElementById("random-tones")?.remove();
+    const images = document.querySelectorAll<HTMLImageElement>(".work-item__image, .work-detail__image");
+    if (!on) {
+      images.forEach((img) => (img.style.filter = ""));
+      return;
+    }
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.id = "random-tones";
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    svg.setAttribute("style", "position:absolute");
+    images.forEach((img, i) => {
+      svg.appendChild(duotone(`random-tone-${i}`, ...randomColor()));
+      img.style.filter = `url(#random-tone-${i})`;
+    });
+    document.body.appendChild(svg);
+  }
+
+  grayBtn?.addEventListener("click", () => {
+    tone = (tone + 1) % tones.length;
+    root.classList.toggle("pictures-gray", tones[tone] === "gray");
+    root.classList.toggle("pictures-off", tones[tone] === "off");
+    applyRandom(tones[tone] === "random");
+    grayBtn.textContent = `picture: ${tones[tone]}`;
+    grayBtn.setAttribute("aria-pressed", String(tone !== 0));
+  });
+</script>

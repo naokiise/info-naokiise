@@ -1,0 +1,138 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Header2D from "../components/Header2D.astro";
+import { frontmatter } from "../data/works.md";
+import type { WorkRow } from "../lib/types";
+import { compositeFontHtml } from "../lib/typography";
+import { getWorkId } from "../lib/slug";
+import profile from "../data/profile.json";
+
+// Sort works chronologically by year and filter out educational background
+const works = frontmatter.works as (WorkRow & { section: string })[];
+const filteredWorks = works.filter(work => work.section !== "Educational background");
+const sortedWorks = [...filteredWorks].sort((a, b) => {
+  const yearA = parseInt(a.year) || 0;
+  const yearB = parseInt(b.year) || 0;
+  return yearB - yearA; // Descending order (newest first)
+});
+
+// Split works into two columns in zigzag pattern (left-right-left-right)
+const column1 = sortedWorks.filter((_, index) => index % 2 === 0);
+const column2 = sortedWorks.filter((_, index) => index % 2 === 1);
+
+// Helper function to get hostname from URL
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+// Get IDs of all works for client-side filtering
+const allWorkIds = sortedWorks.map(getWorkId);
+
+---
+
+<Layout>
+  <Navbar />
+  <Header2D />
+  <main class="content">
+    <div class="works-chronological" data-work-ids={allWorkIds.join(',')}>
+      <div class="works-columns">
+        <div class="works-column">
+          <ul class="work-list">
+            {column1.map((work) => (
+              <li class={`work-item${work.image ? "" : " work-item--noimage"}`} data-work-id={getWorkId(work)}>
+                <div class="work-item__body">
+                  <a class="work-item__title-link" href={`${import.meta.env.BASE_URL}work/${getWorkId(work)}/`}>
+                    <p class="work-item__title" set:html={compositeFontHtml(work.title)} />
+                  </a>
+                  {work.text && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.text)} />
+                  )}
+                  {work.venue && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.venue)} />
+                  )}
+                  {work.publisher && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.publisher)} />
+                  )}
+                  {work.link && (
+                    <p class="work-item__meta">
+                      <a href={work.link} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                        {getHostname(work.link)}
+                      </a>
+                    </p>
+                  )}
+                  {work.youtube && (
+                    <p class="work-item__meta">
+                      <a href={`https://youtube.com/watch?v=${work.youtube}`} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                        YouTube
+                      </a>
+                    </p>
+                  )}
+                </div>
+                {work.image ? (
+                  <div class="work-item__image-container">
+                    <img src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} alt={work.title} class="work-item__image" />
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="works-column">
+          <ul class="work-list">
+            {column2.map((work) => (
+              <li class={`work-item${work.image ? "" : " work-item--noimage"}`} data-work-id={getWorkId(work)}>
+                <div class="work-item__body">
+                  <a class="work-item__title-link" href={`${import.meta.env.BASE_URL}work/${getWorkId(work)}/`}>
+                    <p class="work-item__title" set:html={compositeFontHtml(work.title)} />
+                  </a>
+                  {work.text && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.text)} />
+                  )}
+                  {work.venue && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.venue)} />
+                  )}
+                  {work.publisher && (
+                    <p class="work-item__meta" set:html={compositeFontHtml(work.publisher)} />
+                  )}
+                  {work.link && (
+                    <p class="work-item__meta">
+                      <a href={work.link} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                        {getHostname(work.link)}
+                      </a>
+                    </p>
+                  )}
+                  {work.youtube && (
+                    <p class="work-item__meta">
+                      <a href={`https://youtube.com/watch?v=${work.youtube}`} target="_blank" rel="noopener noreferrer" class="work-item__link">
+                        YouTube
+                      </a>
+                    </p>
+                  )}
+                </div>
+                {work.image ? (
+                  <div class="work-item__image-container">
+                    <img src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} alt={work.title} class="work-item__image" />
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <section class="profile" aria-label="Profile">
+      {(profile as { label: string; html: string }[]).map((row) => (
+        <div class="profile__row">
+          <p class="profile__label" set:html={row.label} />
+          <p class="profile__value" set:html={row.html} />
+        </div>
+      ))}
+    </section>
+  </main>
+</Layout>

@@ -1,0 +1,75 @@
+---
+---
+
+<div class="header-2d">
+  <div class="header-2d__container">
+    <div class="header-2d__text">
+      <p class="header-2d__text-1">Wired AI-generated Collages</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .header-2d {
+    width: 100%;
+    background: var(--bg);
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-2d__container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 8px 96px 10px;
+    position: relative;
+    min-height: 30px;
+  }
+
+  .header-2d__menu {
+    position: absolute;
+    right: 96px;
+    top: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    opacity: 0.7;
+  }
+
+  .header-2d__menu:hover {
+    opacity: 1;
+  }
+
+  .header-2d__text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .header-2d__text-1 {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .header-2d__container {
+      padding: 6px 24px 8px;
+      min-height: 25px;
+    }
+
+    .header-2d__menu {
+      right: 24px;
+      top: 6px;
+      font-size: 11px;
+    }
+
+    .header-2d__text-1 {
+      font-size: 11px;
+    }
+  }
+</style>

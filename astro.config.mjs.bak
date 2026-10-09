@@ -1,0 +1,91 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Dev-only endpoint: drop an image on a work node in the browser and it
+// is saved to public/images/works/ and written into src/data/works.md.
+function imageDropDev() {
+  /** @type {import('astro').AstroIntegration} */
+  const integration = {
+    name: 'image-drop-dev',
+    hooks: {
+      'astro:server:setup': ({ server }) => {
+        server.middlewares.use('/__image-drop', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end('POST only');
+            return;
+          }
+          const chunks = [];
+          req.on('data', (c) => chunks.push(c));
+          req.on('end', () => {
+            try {
+              const index = Number(req.headers['x-work-index']);
+              const rawName = decodeURIComponent(
+                String(req.headers['x-file-name'] ?? 'image.png'),
+              );
+              if (!Number.isInteger(index) || index < 0) {
+                throw new Error(`bad work index: ${index}`);
+              }
+
+              // Save the file under a collision-free sanitized name.
+              const ext = (path.extname(rawName) || '.png').toLowerCase();
+              if (!['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.avif'].includes(ext)) {
+                throw new Error(`not an image: ${rawName}`);
+              }
+              const base =
+                path
+                  .basename(rawName, ext)
+                  .toLowerCase()
+                  .replace(/[^a-z0-9_-]+/g, '-')
+                  .replace(/^-+|-+$/g, '') || 'image';
+              const dir = path.join(process.cwd(), 'public/images/works');
+              fs.mkdirSync(dir, { recursive: true });
+              let file = `${base}${ext}`;
+              let n = 1;
+              while (fs.existsSync(path.join(dir, file))) file = `${base}-${n++}${ext}`;
+              fs.writeFileSync(path.join(dir, file), Buffer.concat(chunks));
+
+              // Write image: into the index-th work block of works.md,
+              // replacing an existing image: line if present.
+              const mdPath = path.join(process.cwd(), 'src/data/works.md');
+              const lines = fs.readFileSync(mdPath, 'utf8').split('\n');
+              const starts = lines
+                .map((l, i) => (/^  - /.test(l) ? i : -1))
+                .filter((i) => i >= 0);
+              if (index >= starts.length) throw new Error(`no work at index ${index}`);
+              const start = starts[index];
+              const end = starts[index + 1] ?? lines.indexOf('---', start);
+              const imageLine = `    image: "images/works/${file}"`;
+              const existing = lines.findIndex(
+                (l, i) => i >= start && i < end && /^ {4}image:/.test(l),
+              );
+              if (existing >= 0) lines[existing] = imageLine;
+              else lines.splice(end, 0, imageLine);
+              fs.writeFileSync(mdPath, lines.join('\n'));
+
+              res.setHeader('content-type', 'application/json');
+              res.end(JSON.stringify({ ok: true, file }));
+            } catch (e) {
+              res.statusCode = 500;
+              res.end(String(e));
+            }
+          });
+        });
+      },
+    },
+  };
+  return integration;
+}
+
+// https://astro.build/config
+export default defineConfig({
+  site: 'https://naokiise.com',
+  base: '/info/',
+  integrations: [mdx(), imageDropDev()],
+  devToolbar: {
+    enabled: false,
+  },
+});

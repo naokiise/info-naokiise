@@ -31,10 +31,11 @@ npm run deploy
 ## 構成
 
 - `src/pages/index.astro` — トップページ
-- `src/data/site.json` — 作品・実績データ
+- `src/data/works.md` — 作品・実績データ
 - `src/components/` — UI コンポーネント
-- `src/styles/global.css` — Notion 風スタイル
+- `src/styles/global.css` — スタイル
 
 ## データ更新
 
-`src/data/site.json` を編集して保存すると、開発サーバーが自動で反映します。
+`src/data/works.md` を編集して保存すると、開発サーバーが自動で反映します。
+各作品の追加・編集・削除は基本的に `src/data/works.md` で行います。

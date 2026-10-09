@@ -1,0 +1,51 @@
+---
+import type { WorkRow } from "../lib/types";
+import { compositeFontHtml } from "../lib/typography";
+
+interface Props {
+  row: WorkRow;
+  nodeId: string;
+  section: string;
+}
+
+const { row, nodeId, section } = Astro.props;
+const meta = [row.text, row.venue, row.publisher].filter(Boolean).join(" ");
+const imageSrc = row.image
+  ? import.meta.env.BASE_URL + row.image.replace(/^\//, "")
+  : null;
+---
+
+<div id={nodeId} class="work-section work-section--node" data-section={section}>
+  <button type="button" class="work-section__summary">
+    <span class="work-section__year font-inter" lang="en">{row.year}</span>
+    <span class="work-section__title" set:html={compositeFontHtml(row.title)} />
+    {meta && <span class="work-section__node-meta" set:html={compositeFontHtml(meta)} />}
+    {imageSrc && (
+      <img
+        class="work-section__image"
+        src={imageSrc}
+        alt={row.title}
+        loading="lazy"
+      />
+    )}
+  </button>
+  {row.link && (
+    <a
+      class="work-section__link font-inter"
+      href={row.link}
+      target="_blank"
+      rel="noopener noreferrer"
+    >{new URL(row.link).hostname}<span class="work-section__link-arrow" aria-hidden="true"> ↗</span></a>
+  )}
+  {row.youtube && (
+    <iframe
+      class="work-section__video"
+      src={`https://www.youtube.com/embed/${row.youtube}`}
+      title={row.title}
+      loading="lazy"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  )}
+</div>
