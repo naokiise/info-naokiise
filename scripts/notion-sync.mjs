@@ -316,7 +316,7 @@ async function download(block) {
 // Large animated GIFs (e.g. 1920×1080, 100+ frames) fail to load in Safari.
 // Convert only those to an animated WebP (keeps transparency, smaller, plays in Safari 14+).
 // Small GIFs are kept as they are. Needs "ffmpeg-static" (npm install --save-dev ffmpeg-static).
-let ffmpegPath;
+var ffmpegPath;
 async function gifToWebp(gifPath) {
   const webpPath = gifPath.replace(/\.gif$/i, ".webp");
   const rel = `images/works/${webpPath.split("/").pop()}`;
@@ -348,4 +348,20 @@ function loadEnv(file) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
+}
+function cover(page) {
+  // Page cover with an external URL (stable). Notion-hosted files expire, so skip those.
+  return page.cover?.type === "external" ? page.cover.external.url : "";
+}
+function parseWorksMd(md) {
+  const list = [];
+  for (const line of md.split("\n")) {
+    const m = line.match(/^\s*(-\s+)?([a-z]+):\s*(.+)$/);
+    if (!m || m[2] === "works") continue;
+    if (m[1]) list.push({});
+    let v = m[3].trim();
+    try { v = JSON.parse(v); } catch { v = v.replace(/^["']|["']$/g, ""); }
+    if (list.length) list[list.length - 1][m[2]] = String(v);
+  }
+  return list;
 }
