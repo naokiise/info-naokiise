@@ -12,7 +12,7 @@ works:
   - section: "Interface Design"
     year: "2022"
     title: "NeuCraft"
-    image: "images/works/notion-23f611da5e5e292b.gif"
+    image: "images/works/notion-1289e7f792a193b7.gif"
   - section: "Interface Design"
     year: "2020"
     title: "Neural Beatbox"

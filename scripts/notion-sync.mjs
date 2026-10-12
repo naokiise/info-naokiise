@@ -309,28 +309,36 @@ async function download(block) {
       }
     }
   }
+  if (ext === ".gif") return (await gifToWebp(dest)) || `images/works/${name}`;
   return `images/works/${name}`;
 }
-function cover(page) {
-  // Page cover with an external URL (stable). Notion-hosted files expire, so skip those.
-  return page.cover?.type === "external" ? page.cover.external.url : "";
-}
-function parseWorksMd(md) {
-  const list = [];
-  for (const line of md.split("\n")) {
-    const m = line.match(/^\s*(-\s+)?([a-z]+):\s*(.+)$/);
-    if (!m || m[2] === "works") continue;
-    if (m[1]) list.push({});
-    let v = m[3].trim();
-    try { v = JSON.parse(v); } catch { v = v.replace(/^["']|["']$/g, ""); }
-    if (list.length) list[list.length - 1][m[2]] = String(v);
+
+// Large animated GIFs (e.g. 1920×1080, 100+ frames) fail to load in Safari.
+// Convert only those to an animated WebP (keeps transparency, smaller, plays in Safari 14+).
+// Small GIFs are kept as they are. Needs "ffmpeg-static" (npm install --save-dev ffmpeg-static).
+let ffmpegPath;
+async function gifToWebp(gifPath) {
+  const webpPath = gifPath.replace(/\.gif$/i, ".webp");
+  const rel = `images/works/${webpPath.split("/").pop()}`;
+  if (existsSync(webpPath)) return rel;
+  const buf = readFileSync(gifPath);
+  const width = buf.readUInt16LE(6);
+  if (width <= 1280 && buf.length <= 3 * 1024 * 1024) return ""; // small enough: keep GIF
+  if (ffmpegPath === undefined) {
+    try { ffmpegPath = (await import("ffmpeg-static")).default; } catch { ffmpegPath = null; }
+    if (!ffmpegPath) console.warn("[notion-sync] ffmpeg-static not installed — large GIFs are kept as GIF");
   }
-  return list;
-}
-function loadEnv(file) {
-  if (!existsSync(file)) return;
-  for (const line of readFileSync(file, "utf8").split("\n")) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  if (!ffmpegPath) return "";
+  const { execFileSync } = await import("node:child_process");
+  try {
+    execFileSync(ffmpegPath, [
+      "-y", "-loglevel", "error", "-i", gifPath,
+      "-vf", "scale='min(1280,iw)':-2:flags=lanczos",
+      "-c:v", "libwebp_anim", "-lossless", "0", "-quality", "75", "-loop", "0", "-an", webpPath,
+    ]);
+    return rel;
+  } catch (e) {
+    console.warn(`[notion-sync] GIF → WebP failed, keeping GIF: ${e.message}`);
+    return "";
   }
 }

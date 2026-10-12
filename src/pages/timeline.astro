@@ -84,7 +84,11 @@ const allWorkIds = sortedWorks.map(getWorkId);
                 </div>
                 {work.image ? (
                   <div class="work-item__image-container">
-                    <img src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} alt={work.title} class="work-item__image" />
+                    {work.image.endsWith(".mp4") ? (
+                      <video src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} class="work-item__image" autoplay muted loop playsinline aria-label={work.title}></video>
+                    ) : (
+                      <img src={import.meta.env.BASE_URL + work.image.replace(/^\//, "")} alt={work.title} class="work-item__image" />
+                    )}
                   </div>
                 ) : null}
               </li>

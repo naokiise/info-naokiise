@@ -58,12 +58,20 @@ function getHostname(url: string): string {
       </header>
       <div class="work-detail__body">
         {blocks.length === 0 && work.image && (
+          work.image.endsWith(".mp4") ? (
+          <video class="work-detail__image" src={base + work.image.replace(/^\//, "")} autoplay muted loop playsinline aria-label={work.title}></video>
+        ) : (
           <img class="work-detail__image" src={base + work.image.replace(/^\//, "")} alt={work.title} />
+        )
         )}
         {blocks.map((b) =>
           b.type === "image" ? (
             <figure class="work-detail__figure">
-              <img class="work-detail__image" src={base + (b.src ?? "").replace(/^\//, "")} alt="" loading="lazy" />
+              {(b.src ?? "").endsWith(".mp4") ? (
+                <video class="work-detail__image" src={base + (b.src ?? "").replace(/^\//, "")} autoplay muted loop playsinline></video>
+              ) : (
+                <img class="work-detail__image" src={base + (b.src ?? "").replace(/^\//, "")} alt="" loading="lazy" />
+              )}
               {b.caption && <figcaption set:html={b.caption} />}
             </figure>
           ) : b.type === "h" ? (
