@@ -1104,6 +1104,27 @@ html:has(.works--scatter) {
 }
 
 
+/* Top / timeline: header menu spread evenly across the width, starting at the left */
+.navbar--menu .navbar__inner {
+  display: flex;
+}
+.navbar--menu .navbar__inner > div:not(.navbar__actions) {
+  display: none;
+}
+.navbar--menu .navbar__actions {
+  flex: 1;
+  justify-content: space-between;
+}
+.navbar--menu .navbar__text-toggle {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* picture off: drop the picture column, texts use the full width and the lines follow */
+.pictures-off .works-flow .work-item {
+  grid-template-columns: 1fr;
+}
+
 /* Profile (from the Notion list page), below the works */
 .profile {
   max-width: var(--content-max);
@@ -1117,12 +1138,6 @@ html:has(.works--scatter) {
   grid-template-columns: 1fr 1fr;
   gap: var(--column-spacing);
   padding: 12px 2px 16px;
-  border-top: 1px solid var(--border);
-}
-
-/* Only one line above the profile; none between its rows */
-.profile__row + .profile__row {
-  border-top: none;
 }
 
 .profile__label,

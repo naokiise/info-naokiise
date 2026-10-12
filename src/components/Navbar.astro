@@ -7,17 +7,19 @@ interface Props {
 const { back = false } = Astro.props;
 ---
 
-<header class="navbar">
+<header class:list={["navbar", { "navbar--menu": !back }]}>
   <div class="navbar__inner">
-    <div>{back && <a class="navbar__back" href={import.meta.env.BASE_URL}>← Back</a>}</div>
+    <div>{back && <a class="navbar__back" href={import.meta.env.BASE_URL}>← back</a>}</div>
     <div></div>
+    {!back && (
     <div class="navbar__actions">
-      <button id="gray-toggle" class="navbar__text-toggle" type="button" aria-pressed="false">picture: color</button>
+      <button id="gray-toggle" class="navbar__text-toggle" type="button" aria-pressed="true">picture: random</button>
       <span class="navbar__sep" aria-hidden="true">|</span>
       <button id="text-toggle" class="navbar__text-toggle" type="button" aria-pressed="true">text: on</button>
       <span class="navbar__sep" aria-hidden="true">|</span>
       <ThemeToggle />
     </div>
+    )}
   </div>
 </header>
 
@@ -66,7 +68,13 @@ const { back = false } = Astro.props;
   // Pictures: color → gray → random → off → color
   const grayBtn = document.getElementById("gray-toggle");
   const tones = ["color", "gray", "random", "off"];
-  let tone = 0;
+  // default: random on the list pages, color on individual work pages
+  const isDetail = !!document.querySelector(".work-detail");
+  let tone = isDetail ? 0 : 2;
+  if (grayBtn) {
+    grayBtn.textContent = `picture: ${tones[tone]}`;
+    grayBtn.setAttribute("aria-pressed", String(tone !== 0));
+  }
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   // Duotone filter: black → (r, g, b), white → white
@@ -117,4 +125,6 @@ const { back = false } = Astro.props;
     grayBtn.textContent = `picture: ${tones[tone]}`;
     grayBtn.setAttribute("aria-pressed", String(tone !== 0));
   });
+
+  applyRandom(tones[tone] === "random");
 </script>

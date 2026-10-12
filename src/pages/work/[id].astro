@@ -92,8 +92,60 @@ function getHostname(url: string): string {
         )}
       </div>
     </article>
+    <div id="lightbox" class="lightbox" hidden></div>
   </main>
 </Layout>
+
+<script>
+  // Click a picture to see it bigger; click again (or Esc) to close.
+  const box = document.getElementById("lightbox")!;
+  const close = () => {
+    box.hidden = true;
+    box.replaceChildren();
+  };
+  document.querySelectorAll<HTMLElement>(".work-detail__image").forEach((el) => {
+    el.addEventListener("click", () => {
+      const big = el.cloneNode(true) as HTMLElement;
+      big.className = "lightbox__image";
+      big.style.filter = el.style.filter; // keep the current picture mode (gray / random)
+      if (big instanceof HTMLVideoElement) big.play();
+      box.replaceChildren(big);
+      box.hidden = false;
+    });
+  });
+  box.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+</script>
+
+<style is:global>
+  .work-detail__image {
+    cursor: zoom-in;
+  }
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+    cursor: zoom-out;
+  }
+  .lightbox[hidden] {
+    display: none;
+  }
+  .lightbox__image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .pictures-gray .lightbox__image {
+    filter: grayscale(1);
+  }
+</style>
 
 <style>
   .work-detail {
